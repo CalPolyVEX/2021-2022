@@ -1,5 +1,15 @@
 #include "main.h"
 
+#define LEFT_WHEELS_1_PORT 1
+#define LEFT_WHEELS_2_PORT 4
+#define RIGHT_WHEELS_1_PORT 2
+#define RIGHT_WHEELS_2_PORT 3
+#define CLAW_PORT 13
+#define GYRO_PORT 15
+#define TOUCH_BUTTON_PORT 'A'
+#define PISTON_1_PORT 'B'
+#define PISTON_2_PORT 'C'
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -24,9 +34,11 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+	//pros::lcd::set_text(1, "Hello PROS User!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
+
+	//pros::ADIDigitalOut piston (DIGITAL_SENSOR_PORT);
 }
 
 /**
@@ -73,20 +85,80 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+
 void opcontrol() {
+	//controller
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2);
+	//drive motors
+	pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
+	pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
+	pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
+	pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
+	//claw motor
+	pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
+	//pistons
+	pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
+	pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
+	//touch touch sensor
+	pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
+	//gyro
+	pros::Imu gyro (GYRO_PORT);
+	//gyro.reset();
+	int turning = 0;
 
 	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+		//print stuff
+		//double gyroValue = gyro.get_rotation();
+		int randVal = 334634;
+		pros::lcd::set_text(1, std::to_string(randVal));
+	  //get joystick values, and use those values to drive
 		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
-
-		left_mtr = left;
-		right_mtr = right;
+		int right = -master.get_analog(ANALOG_RIGHT_Y);
+		left_mtr_1 = left;
+		left_mtr_2 = left;
+		right_mtr_1 = right;
+		right_mtr_2 = right;
+		//open/close claw based on left triggers
+		if (master.get_digital(DIGITAL_L1)) {
+      claw.move_velocity(100);
+    }
+    else if (master.get_digital(DIGITAL_L2)) {
+      claw.move_velocity(-100);
+    }
+    else {
+      claw.move_velocity(0);
+    }
+		//toggle pistons with touch button
+		if (touch_button.get_value()) {
+			piston_1.set_value(true);
+			piston_2.set_value(true);
+    }
+    else {
+			piston_1.set_value(false);
+			piston_2.set_value(false);
+    }
+		//determine whether turning
+		/*
+		if (turning == 0 && master.get_digital(DIGITAL_RIGHT)) {
+			gyro.reset();
+			turning = 1;
+		} else if (turning == 0 && master.get_digital(DIGITAL_LEFT)) {
+			gyro.reset();
+			turning = -1;
+		}
+		if (turning != 0) {
+			if (gyro.get_value() >= (30.0)) {
+				turning = 0;
+			} else {
+				left_mtr_1 = 127;
+				left_mtr_2 = 127;
+				right_mtr_1 = 127;
+				right_mtr_2 = 127;
+			}
+		}
+		*/
+		//delay to save resources
 		pros::delay(20);
 	}
 }
