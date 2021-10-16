@@ -11,6 +11,17 @@
 #define PISTON_2_PORT 'C'
 
 /**
+Utility functions
+*/
+double compare_rotations(double rot_i, double rot_f, int dir) {
+	double difference = rot_f - rot_i;
+	while (difference * dir < 0) {
+		difference += 360 * dir;
+	}
+	return difference;
+}
+
+/**
  * A callback function for LLEMU's center button.
  *
  * When this callback is fired, it will toggle line 2 of the LCD text between
@@ -106,12 +117,9 @@ void opcontrol() {
 	pros::Imu gyro (GYRO_PORT);
 	//gyro.reset();
 	int turning = 0;
+	double pre_turn_rotation = gyro.get_yaw();
 
 	while (true) {
-		//print stuff
-		//double gyroValue = gyro.get_rotation();
-		int randVal = 334634;
-		pros::lcd::set_text(1, std::to_string(randVal));
 	  //get joystick values, and use those values to drive
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = -master.get_analog(ANALOG_RIGHT_Y);
@@ -139,25 +147,35 @@ void opcontrol() {
 			piston_2.set_value(false);
     }
 		//determine whether turning
-		/*
-		if (turning == 0 && master.get_digital(DIGITAL_RIGHT)) {
-			gyro.reset();
+		if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
+			pre_turn_rotation = gyro.get_yaw();
 			turning = 1;
-		} else if (turning == 0 && master.get_digital(DIGITAL_LEFT)) {
-			gyro.reset();
+		} else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
+			pre_turn_rotation = gyro.get_yaw();
 			turning = -1;
 		}
-		if (turning != 0) {
-			if (gyro.get_value() >= (30.0)) {
-				turning = 0;
-			} else {
-				left_mtr_1 = 127;
-				left_mtr_2 = 127;
-				right_mtr_1 = 127;
-				right_mtr_2 = 127;
+		double current_rotation = gyro.get_yaw();
+		double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
+		double turnAmount = 90.0;
+		if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
+			double throttle = 0;
+			/*
+			This spaghetti code throttles the turning speed
+			It looks at the remaining amount of turning required and scales the throttle amount
+			*/
+			if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
+				throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
 			}
+			left_mtr_1 = (25 - throttle) * turning;
+			left_mtr_2 = (25 - throttle) * turning;
+			right_mtr_1 = (25 - throttle) * turning;
+			right_mtr_2 = (25 - throttle) * turning;
+		} else {
+			turning = 0;
 		}
-		*/
+		//print stuff
+		double gyroVal = gyro.get_yaw();
+		pros::lcd::set_text(1, std::to_string(rotation_difference));
 		//delay to save resources
 		pros::delay(20);
 	}

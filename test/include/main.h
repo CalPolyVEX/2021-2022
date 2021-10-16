@@ -35,6 +35,7 @@
 #define PROS_USE_LITERALS
 
 #include "api.h"
+#include <cmath>
 
 /**
  * You should add more #includes here
