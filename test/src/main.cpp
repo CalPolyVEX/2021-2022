@@ -10,6 +10,25 @@
 #define PISTON_1_PORT 'B'
 #define PISTON_2_PORT 'C'
 
+#define ERROR_BOUND 1
+
+//controller
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+//drive motors
+pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
+pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
+pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
+pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
+//claw motor
+pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
+//pistons
+pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
+pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
+//touch touch sensor
+pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
+//gyro
+pros::Imu gyro (GYRO_PORT);
+
 /**
 Utility functions
 */
@@ -81,6 +100,56 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+ void compareFunc() {
+	 while (true) {
+		 double output = 127;
+		 left_mtr_1 = output;
+		 left_mtr_2 = output;
+		 right_mtr_1 = -output;
+		 right_mtr_2 = -output;
+	 }
+ }
+
+ void positionPID(double desired_dist) {
+	 double error_prior = 0;
+	 double integral_prior = 0;
+	 double dT = 10;
+	 double kP = 50;
+	 double kD = 10;
+	 double kI = 5;
+
+	 // shoutout Kyle for PI
+	 // desired revolutions
+	 double circumference = (4*3.14159265358979323846264338327950288419716939);
+	 double desired = desired_dist/circumference;
+	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
+	 double initialActual = left_mtr_1.get_position();
+
+
+	 while (true) {
+		 double actual = (left_mtr_1.get_position()) - initialActual;
+		 double error = desired - actual;
+		 pros::lcd::set_text(2, "Revs: " + std::to_string(left_mtr_1.get_position()));
+		 pros::lcd::set_text(3, "Act: " + std::to_string(actual));
+		 pros::lcd::set_text(4, "Err: " + std::to_string(error));
+		 if (error < ERROR_BOUND) {
+			 break;
+		 }
+		 double integral = integral_prior - (error*dT);
+		 double derivative = (error - error_prior)/dT;
+		 //int8_t output = (int8_t)((kP*error) + (kI*integral) + (kD*derivative));
+		 double output = 15;
+		 left_mtr_1 = output;
+		 left_mtr_2 = output;
+		 right_mtr_1 = -output;
+		 right_mtr_2 = -output;
+
+		 error_prior = error;
+		 integral_prior = integral;
+		 pros::delay(dT);
+	 }
+ }
+
 void autonomous() {}
 
 /**
@@ -97,24 +166,7 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 
-
 void opcontrol() {
-	//controller
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	//drive motors
-	pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
-	pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
-	pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
-	pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
-	//claw motor
-	pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
-	//pistons
-	pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
-	pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
-	//touch touch sensor
-	pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
-	//gyro
-	pros::Imu gyro (GYRO_PORT);
 	//gyro.reset();
 	int turning = 0;
 	double pre_turn_rotation = gyro.get_yaw();
@@ -154,6 +206,12 @@ void opcontrol() {
 			pre_turn_rotation = gyro.get_yaw();
 			turning = -1;
 		}
+
+		if (master.get_digital(DIGITAL_B) == 1) {
+			// compareFunc();
+			positionPID(20);
+		}
+
 		double current_rotation = gyro.get_yaw();
 		double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
 		double turnAmount = 90.0;
@@ -175,7 +233,7 @@ void opcontrol() {
 		}
 		//print stuff
 		double gyroVal = gyro.get_yaw();
-		pros::lcd::set_text(1, std::to_string(rotation_difference));
+		pros::lcd::set_text(1, "Opcontrol loop"); //std::to_string(rotation_difference)
 		//delay to save resources
 		pros::delay(20);
 	}

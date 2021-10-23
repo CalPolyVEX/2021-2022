@@ -35,7 +35,11 @@
 #define PROS_USE_LITERALS
 
 #include "api.h"
+#include "okapi/api.hpp"
 #include <cmath>
+#include <algorithm>
+#include "okapi/api.hpp"
+using namespace okapi;
 
 /**
  * You should add more #includes here
