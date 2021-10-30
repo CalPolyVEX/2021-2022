@@ -10,7 +10,7 @@
 #define PISTON_1_PORT 'B'
 #define PISTON_2_PORT 'C'
 
-#define ERROR_BOUND 1
+#define ERROR_BOUND 0.01
 
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -110,54 +110,50 @@ void competition_initialize() {}
 	 }
  }
 
- void positionPID(double desired_dist) {
+ void positionPID(double desired_dist_inches) {
+	 // constants for PID calculations
+	 const double dT = 10;
+	 const double kP = 200;
+	 const double kD = 10;
+	 const double kI = 0;
+	 // values to track
 	 double error_prior = 0;
 	 double integral_prior = 0;
-	 double dT = 10;
-	 double kP = 127;
-	 double kD = 10;
-	 double kI = 5;
-
-	 // shoutout Kyle for PI
-	 // desired revolutions
-	 // circumference units = inches
-	 double circumference = (4*3.14159265358979323846264338327950288419716939);
-	 // desired units = revolutions
-	 double desired = desired_dist/circumference;
+	 // calculate wheel circumference
+	 const double circumference = (4 * M_PI); //units: inches
+	 // everything from here on out is measured in revolutions
+	 double desired = desired_dist_inches / circumference;
 	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
-	 // initActual units = revolutions
-	 double initialActual = left_mtr_1.get_position();
-
-
+	 double initialMotorPosition = left_mtr_1.get_position();
 	 while (true) {
-		 // actual units = revolutions
-		 double actual = (left_mtr_1.get_position()) - initialActual;
-		 // error units = revolutions
+		 // calculate known distances
+		 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
 		 double error = desired - actual;
-		 pros::lcd::set_text(2, "Revs: " + std::to_string(left_mtr_1.get_position()));
-		 pros::lcd::set_text(3, "Act: " + std::to_string(actual));
-		 pros::lcd::set_text(4, "Err: " + std::to_string(error));
+		 // if we're within the ERROR_BOUND, exit PID loop
 		 if (abs(error) < ERROR_BOUND) {
 			 break;
 		 }
+		 // calculate I and D
 		 double integral = integral_prior - (error*dT);
 		 double derivative = (error - error_prior)/dT;
-		 // TODO: What do we do with ouput? How should we llink output to motors?
-		 int8_t output = (int8_t)((kP*error) + (kI*integral) + (kD*derivative));
+		 // using PID constants, calculate output
+		 double output = ((kP*error) + (kI*integral) + (kD*derivative));
+		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
+		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
+		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
 		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
-		 if (error > 0) {
-			 output = 30;
-		 } else {
-			 output = -30;
-		 }
-		 //double output = 15;
+		 // clamp output to motor-compatible values
+		 output = fmin(fmax(output, -128), 128);
+		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
+		 // set motors to calculated output
 		 left_mtr_1 = output;
 		 left_mtr_2 = output;
 		 right_mtr_1 = -output;
 		 right_mtr_2 = -output;
-
+		 // record new prior values
 		 error_prior = error;
 		 integral_prior = integral;
+		 // delay by dT
 		 pros::delay(dT);
 	 }
  }
