@@ -113,9 +113,9 @@ void competition_initialize() {}
  void positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
 	 const double dT = 10; //dT is the milliseconds between loops
-	 const double kP = 200; //kP is the most useful part for position PID
-	 const double kI = 0; //kI is *not* helpful for positionPID
-	 const double kD = 10; //kD usually isn't helpful in Vex PID in general, so a small value is fine
+	 const double kP = 50; //kP is the most useful part for position PID
+	 const double kI = 0.01;
+	 const double kD = -0.1; //kD usually isn't helpful in Vex PID in general
 	 // initialize values to track between loops
 	 double error_prior = 0;
 	 double integral_prior = 0;
@@ -134,8 +134,8 @@ void competition_initialize() {}
 			 break;
 		 }
 		 // calculate I and D
-		 double integral = integral_prior - (error*dT);
-		 double derivative = (error - error_prior)/dT;
+		 double integral = integral_prior + (error*dT); // sum of error
+		 double derivative = (error - error_prior)/dT; // change in error over time
 		 // using PID constants, calculate output
 		 double output = ((kP*error) + (kI*integral) + (kD*derivative));
 		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
