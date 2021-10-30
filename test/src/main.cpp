@@ -114,31 +114,43 @@ void competition_initialize() {}
 	 double error_prior = 0;
 	 double integral_prior = 0;
 	 double dT = 10;
-	 double kP = 50;
+	 double kP = 127;
 	 double kD = 10;
 	 double kI = 5;
 
 	 // shoutout Kyle for PI
 	 // desired revolutions
+	 // circumference units = inches
 	 double circumference = (4*3.14159265358979323846264338327950288419716939);
+	 // desired units = revolutions
 	 double desired = desired_dist/circumference;
 	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
+	 // initActual units = revolutions
 	 double initialActual = left_mtr_1.get_position();
 
 
 	 while (true) {
+		 // actual units = revolutions
 		 double actual = (left_mtr_1.get_position()) - initialActual;
+		 // error units = revolutions
 		 double error = desired - actual;
 		 pros::lcd::set_text(2, "Revs: " + std::to_string(left_mtr_1.get_position()));
 		 pros::lcd::set_text(3, "Act: " + std::to_string(actual));
 		 pros::lcd::set_text(4, "Err: " + std::to_string(error));
-		 if (error < ERROR_BOUND) {
+		 if (abs(error) < ERROR_BOUND) {
 			 break;
 		 }
 		 double integral = integral_prior - (error*dT);
 		 double derivative = (error - error_prior)/dT;
-		 //int8_t output = (int8_t)((kP*error) + (kI*integral) + (kD*derivative));
-		 double output = 15;
+		 // TODO: What do we do with ouput? How should we llink output to motors?
+		 int8_t output = (int8_t)((kP*error) + (kI*integral) + (kD*derivative));
+		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
+		 if (error > 0) {
+			 output = 30;
+		 } else {
+			 output = -30;
+		 }
+		 //double output = 15;
 		 left_mtr_1 = output;
 		 left_mtr_2 = output;
 		 right_mtr_1 = -output;
@@ -209,7 +221,7 @@ void opcontrol() {
 
 		if (master.get_digital(DIGITAL_B) == 1) {
 			// compareFunc();
-			positionPID(20);
+			positionPID(30);
 		}
 
 		double current_rotation = gyro.get_yaw();
