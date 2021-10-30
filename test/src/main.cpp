@@ -10,7 +10,7 @@
 #define PISTON_1_PORT 'B'
 #define PISTON_2_PORT 'C'
 
-#define ERROR_BOUND 0.01
+#define ERROR_BOUND 0.001
 
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -114,11 +114,11 @@ void competition_initialize() {}
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
 	 const double dT = 10.0000; //dT is the milliseconds between loops
-	 const double kP = 64.0000; //kP is the most useful part for position PID
-	 const double kI =  0.0150; //kI, in this case, helps ensure movement towards the end
+	 const double kP = 65.0000; //kP is the most useful part for position PID
+	 const double kI =  0.0100; //kI, in this case, helps ensure movement towards the end
 	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
 	 // initialize values to track between loops
-	 double error = 0;
+	 double error = ERROR_BOUND * 2;
 	 double error_prior = 0;
 	 double integral_prior = 0;
 	 // calculate wheel circumference
@@ -127,7 +127,7 @@ void competition_initialize() {}
 	 double desired = desired_dist_inches / circumference;
 	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
 	 double initialMotorPosition = left_mtr_1.get_position();
-	 while (abs(error) < ERROR_BOUND) {
+	 while (abs(error) > ERROR_BOUND) {
 		 // calculate known distances
 		 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
 		 error = desired - actual;
