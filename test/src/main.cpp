@@ -112,11 +112,13 @@ void competition_initialize() {}
 
  void positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
-	 const double dT = 10; //dT is the milliseconds between loops
-	 const double kP = 50; //kP is the most useful part for position PID
-	 const double kI = 0.01;
-	 const double kD = -0.1; //kD usually isn't helpful in Vex PID in general
+	 const double maxSpeed = 128;
+	 const double dT = 10.0000; //dT is the milliseconds between loops
+	 const double kP = 64.0000; //kP is the most useful part for position PID
+	 const double kI =  0.0150; //kI, in this case, helps ensure movement towards the end
+	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
 	 // initialize values to track between loops
+	 double error = 0;
 	 double error_prior = 0;
 	 double integral_prior = 0;
 	 // calculate wheel circumference
@@ -125,25 +127,21 @@ void competition_initialize() {}
 	 double desired = desired_dist_inches / circumference;
 	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
 	 double initialMotorPosition = left_mtr_1.get_position();
-	 while (true) {
+	 while (abs(error) < ERROR_BOUND) {
 		 // calculate known distances
 		 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
-		 double error = desired - actual;
-		 // if we're within the ERROR_BOUND, exit PID loop
-		 if (abs(error) < ERROR_BOUND) {
-			 break;
-		 }
+		 error = desired - actual;
 		 // calculate I and D
 		 double integral = integral_prior + (error*dT); // sum of error
 		 double derivative = (error - error_prior)/dT; // change in error over time
 		 // using PID constants, calculate output
-		 double output = ((kP*error) + (kI*integral) + (kD*derivative));
+		 double output = kP * error + kI * integral + kD * derivative;
 		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
 		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
 		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
 		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
 		 // clamp output to motor-compatible values
-		 output = fmin(fmax(output, -128), 128);
+		 output = fmin(fmax(output, -maxSpeed), maxSpeed);
 		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
 		 // set motors to calculated output
 		 left_mtr_1 = output;
@@ -217,7 +215,7 @@ void opcontrol() {
 
 		if (master.get_digital(DIGITAL_B) == 1) {
 			// compareFunc();
-			positionPID(30);
+			positionPID(20);
 		}
 
 		double current_rotation = gyro.get_yaw();
