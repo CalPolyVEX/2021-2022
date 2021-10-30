@@ -112,11 +112,11 @@ void competition_initialize() {}
 
  void positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
-	 const double dT = 10;
-	 const double kP = 200;
-	 const double kD = 10;
-	 const double kI = 0;
-	 // values to track
+	 const double dT = 10; //dT is the milliseconds between loops
+	 const double kP = 200; //kP is the most useful part for position PID
+	 const double kI = 0; //kI is *not* helpful for positionPID
+	 const double kD = 10; //kD usually isn't helpful in Vex PID in general, so a small value is fine
+	 // initialize values to track between loops
 	 double error_prior = 0;
 	 double integral_prior = 0;
 	 // calculate wheel circumference
