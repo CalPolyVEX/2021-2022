@@ -29,6 +29,13 @@ pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
 //gyro
 pros::Imu gyro (GYRO_PORT);
 
+std::shared_ptr<okapi::ChassisController> chassis =
+  okapi::ChassisControllerBuilder()
+	.withMotors({LEFT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT}, {-RIGHT_WHEELS_1_PORT, -RIGHT_WHEELS_2_PORT})
+    // Green gearset, 4 in wheel diam, 11.5 in wheel track
+    .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
+    .build();
+
 /**
 Utility functions
 */
@@ -187,10 +194,10 @@ void opcontrol() {
 	  //get joystick values, and use those values to drive
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = -master.get_analog(ANALOG_RIGHT_Y);
-		left_mtr_1 = left;
-		left_mtr_2 = left;
-		right_mtr_1 = right;
-		right_mtr_2 = right;
+		// left_mtr_1 = left;
+		// left_mtr_2 = left;
+		// right_mtr_1 = right;
+		// right_mtr_2 = right;
 		//open/close claw based on left triggers
 		if (master.get_digital(DIGITAL_L1)) {
       claw.move_velocity(100);
@@ -202,47 +209,61 @@ void opcontrol() {
       claw.move_velocity(0);
     }
 		//toggle pistons with touch button
-		if (touch_button.get_value()) {
-			piston_1.set_value(true);
-			piston_2.set_value(true);
-    }
-    else {
-			piston_1.set_value(false);
-			piston_2.set_value(false);
-    }
-		//determine whether turning
-		if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
-			pre_turn_rotation = gyro.get_yaw();
-			turning = 1;
-		} else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
-			pre_turn_rotation = gyro.get_yaw();
-			turning = -1;
-		}
+		// if (touch_button.get_value()) {
+		// 	piston_1.set_value(true);
+		// 	piston_2.set_value(true);
+    // }
+    // else {
+		// 	piston_1.set_value(false);
+		// 	piston_2.set_value(false);
+    // }
+		// //determine whether turning
+		// if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
+		// 	pre_turn_rotation = gyro.get_yaw();
+		// 	turning = 1;
+		// } else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
+		// 	pre_turn_rotation = gyro.get_yaw();
+		// 	turning = -1;
+		// }
 
 		if (master.get_digital(DIGITAL_B) == 1) {
 			// compareFunc();
-			positionPID(30);
+			// positionPID(30);
+			// Move 1 meter to the first goal
+			chassis->setMaxVelocity(100);
+			chassis->moveDistance(20_in);
+      pros::delay(300);
+// // Turn 90 degrees to face second goal
+      chassis->turnAngle(90_deg);
+
+      pros::delay(300);
+// // Drive 1 and a half feet toward second goal
+
+// 			chassis->moveDistance(5_in);
+
+
+
 		}
 
-		double current_rotation = gyro.get_yaw();
-		double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
-		double turnAmount = 90.0;
-		if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
-			double throttle = 0;
-			/*
-			This spaghetti code throttles the turning speed
-			It looks at the remaining amount of turning required and scales the throttle amount
-			*/
-			if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
-				throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
-			}
-			left_mtr_1 = (25 - throttle) * turning;
-			left_mtr_2 = (25 - throttle) * turning;
-			right_mtr_1 = (25 - throttle) * turning;
-			right_mtr_2 = (25 - throttle) * turning;
-		} else {
-			turning = 0;
-		}
+		// double current_rotation = gyro.get_yaw();
+		// double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
+		// double turnAmount = 90.0;
+		// if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
+		// 	double throttle = 0;
+		// 	/*
+		// 	This spaghetti code throttles the turning speed
+		// 	It looks at the remaining amount of turning required and scales the throttle amount
+		// 	*/
+		// 	if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
+		// 		throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
+		// 	}
+		// 	left_mtr_1 = (25 - throttle) * turning;
+		// 	left_mtr_2 = (25 - throttle) * turning;
+		// 	right_mtr_1 = (25 - throttle) * turning;
+		// 	right_mtr_2 = (25 - throttle) * turning;
+		// } else {
+		// 	turning = 0;
+		// }
 		//print stuff
 		double gyroVal = gyro.get_yaw();
 		pros::lcd::set_text(1, "Opcontrol loop"); //std::to_string(rotation_difference)

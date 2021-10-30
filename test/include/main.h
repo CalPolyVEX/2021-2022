@@ -39,6 +39,7 @@
 #include <cmath>
 #include <algorithm>
 #include "okapi/api.hpp"
+#include "okapi/impl/device/motor/motorGroup.hpp"
 using namespace okapi;
 
 /**
