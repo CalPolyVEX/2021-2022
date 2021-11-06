@@ -10,7 +10,7 @@
 #define PISTON_1_PORT 'B'
 #define PISTON_2_PORT 'C'
 
-#define ERROR_BOUND 0.001
+#define ERROR_BOUND 0.01
 
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -156,6 +156,49 @@ void competition_initialize() {}
 	 }
  }
 
+ void turnPID(double desired_turn_degrees) {
+	 // constants for PID calculations
+	 const double maxSpeed = 128;
+	 const double dT = 10.0000; //dT is the milliseconds between loops
+	 const double kP = 65.0000; //kP is the most useful part for position PID
+	 const double kI =  0.5000; //kI, in this case, helps ensure movement towards the end
+	 const double kD =  0.0100; //kD usually isn't helpful in Vex PID in general
+	 // initialize values to track between loops
+	 double error = ERROR_BOUND * 2;
+	 double error_prior = 0;
+	 double integral_prior = 0;
+	 // everything from here on out is measured in revolutions
+	 double desired = desired_turn_degrees / 360;
+	 double initial = gyro.get_yaw();
+	 while (abs(error) > ERROR_BOUND) {
+		 // calculate known distances
+		 double actual = gyro.get_yaw() - initial;
+		 error = desired - actual;
+		 // calculate I and D
+		 double integral = integral_prior + (error*dT); // sum of error
+		 double derivative = (error - error_prior)/dT; // change in error over time
+		 // using PID constants, calculate output
+		 double output = kP * error + kI * integral + kD * derivative;
+		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
+		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
+		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
+		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
+		 // clamp output to motor-compatible values
+		 output = fmin(fmax(output, -maxSpeed), maxSpeed);
+		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
+		 // set motors to calculated output
+		 left_mtr_1 = output;
+		 left_mtr_2 = output;
+		 right_mtr_1 = output;
+		 right_mtr_2 = output;
+		 // record new prior values
+		 error_prior = error;
+		 integral_prior = integral;
+		 // delay by dT
+		 pros::delay(dT);
+	 }
+ }
+
 void autonomous() {}
 
 /**
@@ -214,8 +257,11 @@ void opcontrol() {
 		}
 
 		if (master.get_digital(DIGITAL_B) == 1) {
-			// compareFunc();
 			positionPID(20);
+		}
+
+		if (master.get_digital(DIGITAL_X) == 1) {
+			turnPID(90);
 		}
 
 		double current_rotation = gyro.get_yaw();
