@@ -165,7 +165,8 @@ void competition_initialize() {}
  void turnPID(double desired) {
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
-	 const double minSpeed = 9;
+	 const double minSpeed = 9.5;
+	 const int final_iterations =  8; //how many times to run within the error bound
 	 const double dT = 10.0000; //dT is the milliseconds between loops
 	 const double kP =  2.5000; //kP is the most useful part for position PID
 	 const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
@@ -174,14 +175,14 @@ void competition_initialize() {}
 	 double error = ERROR_BOUND_TURN * 2;
 	 double error_prior = 0;
 	 double integral_prior = 0;
-	 double extra_iterations = 1;
+	 double extra_iterations = final_iterations;
 	 // everything from here on out is measured in degrees
 	 double initial = gyro.get_yaw();
 	 while (extra_iterations > 0) {
 		 if (abs(error) < ERROR_BOUND_TURN) {
 			 extra_iterations -= 1;
 		 } else {
-			 extra_iterations = 5;
+			 extra_iterations = final_iterations;
 		 }
 		 // calculate known distances
 		 double actual = gyro.get_yaw() - initial;
