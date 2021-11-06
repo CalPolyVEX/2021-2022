@@ -165,7 +165,7 @@ void competition_initialize() {}
  void turnPID(double desired) {
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
-	 const double minSpeed = 9.5;
+	 const double minSpeed = 13;
 	 const int final_iterations =  8; //how many times to run within the error bound
 	 const double dT = 10.0000; //dT is the milliseconds between loops
 	 const double kP =  2.5000; //kP is the most useful part for position PID
