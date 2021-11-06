@@ -10,7 +10,8 @@
 #define PISTON_1_PORT 'B'
 #define PISTON_2_PORT 'C'
 
-#define ERROR_BOUND 0.01
+#define ERROR_BOUND_DRIVE 0.001
+#define ERROR_BOUND_TURN 0.1
 
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -53,6 +54,20 @@ void on_center_button() {
 		pros::lcd::set_text(2, "I was pressed!");
 	} else {
 		pros::lcd::clear_line(2);
+	}
+}
+
+double clamp(double val, double max, double min) {
+	double sign = 1;
+	if (val < 0) {
+		sign = -1;
+	}
+	if (abs(val) < min) {
+		return min * sign;
+	} else if (abs(val) > max) {
+		return max * sign;
+	} else {
+		return val;
 	}
 }
 
@@ -100,15 +115,6 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
- void compareFunc() {
-	 while (true) {
-		 double output = 127;
-		 left_mtr_1 = output;
-		 left_mtr_2 = output;
-		 right_mtr_1 = -output;
-		 right_mtr_2 = -output;
-	 }
- }
 
  void positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
@@ -118,7 +124,7 @@ void competition_initialize() {}
 	 const double kI =  0.0100; //kI, in this case, helps ensure movement towards the end
 	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
 	 // initialize values to track between loops
-	 double error = ERROR_BOUND * 2;
+	 double error = ERROR_BOUND_DRIVE * 2;
 	 double error_prior = 0;
 	 double integral_prior = 0;
 	 // calculate wheel circumference
@@ -127,7 +133,7 @@ void competition_initialize() {}
 	 double desired = desired_dist_inches / circumference;
 	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
 	 double initialMotorPosition = left_mtr_1.get_position();
-	 while (abs(error) > ERROR_BOUND) {
+	 while (abs(error) > ERROR_BOUND_DRIVE) {
 		 // calculate known distances
 		 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
 		 error = desired - actual;
@@ -156,36 +162,50 @@ void competition_initialize() {}
 	 }
  }
 
- void turnPID(double desired_turn_degrees) {
+ void turnPID(double desired) {
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
+	 const double minSpeed = 9;
 	 const double dT = 10.0000; //dT is the milliseconds between loops
-	 const double kP = 65.0000; //kP is the most useful part for position PID
-	 const double kI =  0.5000; //kI, in this case, helps ensure movement towards the end
-	 const double kD =  0.0100; //kD usually isn't helpful in Vex PID in general
+	 const double kP =  2.5000; //kP is the most useful part for position PID
+	 const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
+	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
 	 // initialize values to track between loops
-	 double error = ERROR_BOUND * 2;
+	 double error = ERROR_BOUND_TURN * 2;
 	 double error_prior = 0;
 	 double integral_prior = 0;
-	 // everything from here on out is measured in revolutions
-	 double desired = desired_turn_degrees / 360;
+	 double extra_iterations = 1;
+	 // everything from here on out is measured in degrees
 	 double initial = gyro.get_yaw();
-	 while (abs(error) > ERROR_BOUND) {
+	 while (extra_iterations > 0) {
+		 if (abs(error) < ERROR_BOUND_TURN) {
+			 extra_iterations -= 1;
+		 } else {
+			 extra_iterations = 5;
+		 }
 		 // calculate known distances
 		 double actual = gyro.get_yaw() - initial;
 		 error = desired - actual;
+		 //sign correct error
+		 while (error < -180) {
+			 error += 360;
+		 }
+		 while (error > 180) {
+			 error -= 360;
+		 }
 		 // calculate I and D
 		 double integral = integral_prior + (error*dT); // sum of error
 		 double derivative = (error - error_prior)/dT; // change in error over time
 		 // using PID constants, calculate output
 		 double output = kP * error + kI * integral + kD * derivative;
-		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
-		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
-		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
-		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
+		 pros::lcd::set_text(2, "initial: " + std::to_string(initial));
+		 pros::lcd::set_text(3, "actual: " + std::to_string(actual));
+		 pros::lcd::set_text(4, "desired: " + std::to_string(desired));
+		 pros::lcd::set_text(5, "Error: " + std::to_string(error));
+		 pros::lcd::set_text(6, "Output: " + std::to_string(output));
 		 // clamp output to motor-compatible values
-		 output = fmin(fmax(output, -maxSpeed), maxSpeed);
-		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
+		 output = clamp(output, maxSpeed, minSpeed);
+		 pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
 		 // set motors to calculated output
 		 left_mtr_1 = output;
 		 left_mtr_2 = output;
@@ -248,44 +268,44 @@ void opcontrol() {
 			piston_2.set_value(false);
     }
 		//determine whether turning
-		if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
-			pre_turn_rotation = gyro.get_yaw();
-			turning = 1;
-		} else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
-			pre_turn_rotation = gyro.get_yaw();
-			turning = -1;
-		}
+		// if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
+		// 	pre_turn_rotation = gyro.get_yaw();
+		// 	turning = 1;
+		// } else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
+		// 	pre_turn_rotation = gyro.get_yaw();
+		// 	turning = -1;
+		// }
 
 		if (master.get_digital(DIGITAL_B) == 1) {
 			positionPID(20);
 		}
 
 		if (master.get_digital(DIGITAL_X) == 1) {
-			turnPID(90);
+			turnPID(-90);
 		}
 
-		double current_rotation = gyro.get_yaw();
-		double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
-		double turnAmount = 90.0;
-		if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
-			double throttle = 0;
-			/*
-			This spaghetti code throttles the turning speed
-			It looks at the remaining amount of turning required and scales the throttle amount
-			*/
-			if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
-				throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
-			}
-			left_mtr_1 = (25 - throttle) * turning;
-			left_mtr_2 = (25 - throttle) * turning;
-			right_mtr_1 = (25 - throttle) * turning;
-			right_mtr_2 = (25 - throttle) * turning;
-		} else {
-			turning = 0;
-		}
+		// double current_rotation = gyro.get_yaw();
+		// double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
+		// double turnAmount = 90.0;
+		// if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
+		// 	double throttle = 0;
+		// 	/*
+		// 	This spaghetti code throttles the turning speed
+		// 	It looks at the remaining amount of turning required and scales the throttle amount
+		// 	*/
+		// 	if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
+		// 		throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
+		// 	}
+		// 	left_mtr_1 = (25 - throttle) * turning;
+		// 	left_mtr_2 = (25 - throttle) * turning;
+		// 	right_mtr_1 = (25 - throttle) * turning;
+		// 	right_mtr_2 = (25 - throttle) * turning;
+		// } else {
+		// 	turning = 0;
+		// }
 		//print stuff
-		double gyroVal = gyro.get_yaw();
-		pros::lcd::set_text(1, "Opcontrol loop"); //std::to_string(rotation_difference)
+		// double gyroVal = gyro.get_yaw();
+		// pros::lcd::set_text(1, "Opcontrol loop"); //std::to_string(rotation_difference)
 		//delay to save resources
 		pros::delay(20);
 	}
