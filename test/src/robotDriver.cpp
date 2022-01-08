@@ -1,50 +1,54 @@
+// include
 #include "robotDriver.h"
-
+// define
 #define ERROR_BOUND_DRIVE 0.001
 #define ERROR_BOUND_TURN 0.1
-
-RobotDriver::RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int backLeftMotorPort, int backRightMotorPort, int gyroPort, double wheelCirc)
+// class
+RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
  gyro(gyroPort)
 {
-  // pros::Imu gyro(gyroPort);
-  wheelCircumference = wheelCirc;
+  int a = 4;
+  chassis = okapi::ChassisControllerBuilder()
+  .withMotors({frontLeftMotorPort, backLeftMotorPort}, {(int8_t)-frontRightMotorPort, (int8_t)-backRightMotorPort})
+  .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
+  .build();
+
+  wheelCircumference = wheelRad * M_PI;
 
   turnPIDdT = 10.0000;
   turnPIDkP =  2.5000;
   turnPIDkI =  0.0000;
   turnPIDkD =  0.0000;
 }
+// utility functions
+double clamp(double val, double max, double min) {
+ double sign = 1;
+ if (val < 0) {
+   sign = -1;
+ }
+ if (std::abs(val) < min) {
+   return min * sign;
+ } else if (std::abs(val) > max) {
+   return max * sign;
+ } else {
+   return val;
+ }
+}
+// getter/setter methods
 void RobotDriver::configTurnPID(double kP, double kI, double kD, double dT) {
   this->turnPIDdT = dT;
   this->turnPIDkP = kP;
   this->turnPIDkI = kI;
   this->turnPIDkD = kD;
 }
-
 void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) {
   this->positionPIDdT = dT;
   this->positionPIDkP = kP;
   this->positionPIDkI = kI;
   this->positionPIDkD = kD;
 }
-
-double clamp(double val, double max, double min) {
-	double sign = 1;
-	if (val < 0) {
-		sign = -1;
-	}
-	if (std::abs(val) < min) {
-		return min * sign;
-	} else if (std::abs(val) > max) {
-		return max * sign;
-	} else {
-		return val;
-	}
-}
-
-
-
+// driving functions
 void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
   const double maxSpeed = 128;
@@ -98,10 +102,7 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     pros::delay(this->turnPIDdT);
   }
 }
-
-
-
- void RobotDriver::positionPID(double desired_dist_inches) {
+void RobotDriver::positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
 	 // initialize values to track between loops
@@ -139,4 +140,4 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
 		 // delay by dT
 		 pros::delay(this->positionPIDdT);
 	 }
- }
+}

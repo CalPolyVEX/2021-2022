@@ -15,7 +15,7 @@
 #define ERROR_BOUND_TURN 0.1
 
 //RobotDriver
-RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, (4 * M_PI));
+RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, 4);
 
 
 //controller
@@ -124,110 +124,6 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
- //
- // void positionPID(double desired_dist_inches) {
-	//  // constants for PID calculations
-	//  const double maxSpeed = 128;
-	//  const double dT = 10.0000; //dT is the milliseconds between loops
-	//  const double kP = 65.0000; //kP is the most useful part for position PID
-	//  const double kI =  0.0100; //kI, in this case, helps ensure movement towards the end
-	//  const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
-	//  // initialize values to track between loops
-	//  double error = ERROR_BOUND_DRIVE * 2;
-	//  double error_prior = 0;
-	//  double integral_prior = 0;
-	//  // calculate wheel circumference
-	//  const double circumference = (4 * M_PI); //units: inches
-	//  // everything from here on out is measured in revolutions
-	//  double desired = desired_dist_inches / circumference;
-	//  left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
-	//  double initialMotorPosition = left_mtr_1.get_position();
-	//  while (abs(error) > ERROR_BOUND_DRIVE) {
-	// 	 // calculate known distances
-	// 	 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
-	// 	 error = desired - actual;
-	// 	 // calculate I and D
-	// 	 double integral = integral_prior + (error*dT); // sum of error
-	// 	 double derivative = (error - error_prior)/dT; // change in error over time
-	// 	 // using PID constants, calculate output
-	// 	 double output = kP * error + kI * integral + kD * derivative;
-	// 	 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
-	// 	 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
-	// 	 pros::lcd::set_text(4, "Error: " + std::to_string(error));
-	// 	 pros::lcd::set_text(5, "Output: " + std::to_string(output));
-	// 	 // clamp output to motor-compatible values
-	// 	 output = fmin(fmax(output, -maxSpeed), maxSpeed);
-	// 	 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
-	// 	 // set motors to calculated output
-	// 	 left_mtr_1 = output;
-	// 	 left_mtr_2 = output;
-	// 	 right_mtr_1 = -output;
-	// 	 right_mtr_2 = -output;
-	// 	 // record new prior values
-	// 	 error_prior = error;
-	// 	 integral_prior = integral;
-	// 	 // delay by dT
-	// 	 pros::delay(dT);
-	//  }
- // }
-
- // void turnPID(double desired) {
-	//  // constants for PID calculations
-	//  const double maxSpeed = 128;
-	//  const double minSpeed = 13;
-	//  const int final_iterations =  8; //how many times to run within the error bound
-	//  const double dT = 10.0000; //dT is the milliseconds between loops
-	//  const double kP =  2.5000; //kP is the most useful part for position PID
-	//  const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
-	//  const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
-	//  // initialize values to track between loops
-	//  double error = ERROR_BOUND_TURN * 2;
-	//  double error_prior = 0;
-	//  double integral_prior = 0;
-	//  double extra_iterations = final_iterations;
-	//  // everything from here on out is measured in degrees
-	//  double initial = gyro.get_yaw();
-	//  while (extra_iterations > 0) {
-	// 	 if (abs(error) < ERROR_BOUND_TURN) {
-	// 		 extra_iterations -= 1;
-	// 	 } else {
-	// 		 extra_iterations = final_iterations;
-	// 	 }
-	// 	 // calculate known distances
-	// 	 double actual = gyro.get_yaw() - initial;
-	// 	 error = desired - actual;
-	// 	 //sign correct error
-	// 	 while (error < -180) {
-	// 		 error += 360;
-	// 	 }
-	// 	 while (error > 180) {
-	// 		 error -= 360;
-	// 	 }
-	// 	 // calculate I and D
-	// 	 double integral = integral_prior + (error*dT); // sum of error
-	// 	 double derivative = (error - error_prior)/dT; // change in error over time
-	// 	 // using PID constants, calculate output
-	// 	 double output = kP * error + kI * integral + kD * derivative;
-	// 	 pros::lcd::set_text(2, "initial: " + std::to_string(initial));
-	// 	 pros::lcd::set_text(3, "actual: " + std::to_string(actual));
-	// 	 pros::lcd::set_text(4, "desired: " + std::to_string(desired));
-	// 	 pros::lcd::set_text(5, "Error: " + std::to_string(error));
-	// 	 pros::lcd::set_text(6, "Output: " + std::to_string(output));
-	// 	 // clamp output to motor-compatible values
-	// 	 // output = clamp(output, maxSpeed, minSpeed);
-	// 	 pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
-	// 	 // set motors to calculated output
-	// 	 left_mtr_1 = output;
-	// 	 left_mtr_2 = output;
-	// 	 right_mtr_1 = output;
-	// 	 right_mtr_2 = output;
-	// 	 // record new prior values
-	// 	 error_prior = error;
-	// 	 integral_prior = integral;
-	// 	 // delay by dT
-	// 	 pros::delay(dT);
-	//  }
- // }
 
 void autonomous() {}
 
@@ -246,11 +142,7 @@ void autonomous() {}
  */
 
 void opcontrol() {
-	//gyro.reset();
-	int turning = 0;
-	double pre_turn_rotation = gyro.get_yaw();
-
-	while (true) {
+	while (1) {
 	  //get joystick values, and use those values to drive
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = -master.get_analog(ANALOG_RIGHT_Y);
@@ -258,38 +150,30 @@ void opcontrol() {
 		left_mtr_2 = left;
 		right_mtr_1 = right;
 		right_mtr_2 = right;
+
 		//open/close claw based on left triggers
-		if (master.get_digital(DIGITAL_L1)) {
-      claw.move_velocity(100);
-    }
-    else if (master.get_digital(DIGITAL_L2)) {
-      claw.move_velocity(-100);
-    }
-    else {
-      claw.move_velocity(0);
-    }
+		// if (master.get_digital(DIGITAL_L1)) {
+    //   claw.move_velocity(100);
+    // }
+    // else if (master.get_digital(DIGITAL_L2)) {
+    //   claw.move_velocity(-100);
+    // }
+    // else {
+    //   claw.move_velocity(0);
+    // }
 		//toggle pistons with touch button
-		if (touch_button.get_value()) {
-			piston_1.set_value(true);
-			piston_2.set_value(true);
-    }
-    else {
-			piston_1.set_value(false);
-			piston_2.set_value(false);
-    }
-		//determine whether turning
-		// if (turning == 0 && master.get_digital(DIGITAL_A) == 1) {
-		// 	pre_turn_rotation = gyro.get_yaw();
-		// 	turning = 1;
-		// } else if (turning == 0 && master.get_digital(DIGITAL_Y) == 1) {
-		// 	pre_turn_rotation = gyro.get_yaw();
-		// 	turning = -1;
-		// }
+		// if (touch_button.get_value()) {
+		// 	piston_1.set_value(true);
+		// 	piston_2.set_value(true);
+    // }
+    // else {
+		// 	piston_1.set_value(false);
+		// 	piston_2.set_value(false);
+    // }
 
 		if (master.get_digital(DIGITAL_B) == 1) {
 			robo->positionPID(20);
 		}
-
 		if (master.get_digital(DIGITAL_X) == 1) {
 			robo->turnPID(-90);
 		}

@@ -1,4 +1,7 @@
 #include "api.h"
+#include "okapi/api.hpp"
+#include "okapi/impl/device/motor/motorGroup.hpp"
+using namespace okapi;
 
 class RobotDriver {
   private:
@@ -7,6 +10,7 @@ class RobotDriver {
   pros::Motor backLeftMotor;
   pros::Motor backRightMotor;
   pros::Imu gyro;
+
   double wheelCircumference;
 
   double turnPIDkP =  2.5000;
@@ -19,8 +23,10 @@ class RobotDriver {
   double positionPIDkD =  0.0000;
   double positionPIDdT = 10.0000;
 
+  std::shared_ptr<okapi::ChassisController> chassis;
+
   public:
-  RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int backLeftMotorPort, int backRightMotorPort, int gyroPort, double wheelCirc);
+  RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad);
 
   void configTurnPID(double kP, double kI, double kD, double dT);
   void turnPID(double desiredTurnAngle);
