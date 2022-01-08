@@ -1,17 +1,11 @@
 #include "robotDriver.h"
 #define ERROR_BOUND_TURN 0.1
 
-
-//RobotDriver::RobotDriver(std::uint8_t frontLeftMotorPort, std::uint8_t frontRightMotorPort, std::uint8_t backLeftMotorPort, std::uint8_t backRightMotorPort, std::uint8_t gyroPort, double wheelCirc) {
-RobotDriver::RobotDriver(pros::Motor *frontLeftMotor, double wheelCirc) {
-  this->frontLeftMotor = frontLeftMotor;
-  /*pros::Motor frontLeftMotor(frontLeftMotorPort);
-  pros::Motor frontRightMotor(frontRightMotorPort);
-  pros::Motor backLeftMotor(backLeftMotorPort);
-  pros::Motor backRightMotor(backRightMotorPort);
-
-  pros::Imu gyro(gyroPort);*/
-
+RobotDriver::RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int backLeftMotorPort, int backRightMotorPort, int gyroPort, double wheelCirc)
+ : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
+ gyro(gyroPort)
+{
+  // pros::Imu gyro(gyroPort);
   wheelCircumference = wheelCirc;
 }
 
@@ -44,7 +38,7 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
   double integral_prior = 0;
   double extra_iterations = final_iterations;
   // everything from here on out is measured in degrees
-  double initial = gyro->get_yaw();
+  double initial = gyro.get_yaw();
   while (extra_iterations > 0) {
     if (std::abs(error) < ERROR_BOUND_TURN) {
       extra_iterations -= 1;
@@ -52,7 +46,7 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
       extra_iterations = final_iterations;
     }
     // calculate known distances
-    double actual = gyro->get_yaw() - initial;
+    double actual = gyro.get_yaw() - initial;
     error = desiredTurnAngle - actual;
     //sign correct error
     while (error < -180) {
@@ -75,10 +69,10 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     output = clamp(output, maxSpeed, minSpeed);
     pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
     // set motors to calculated output
-    *frontLeftMotor = output;
-    *backLeftMotor = output;
-    *frontRightMotor = output;
-    *backRightMotor = output;
+    frontLeftMotor = output;
+    backLeftMotor = output;
+    frontRightMotor = output;
+    backRightMotor = output;
     // record new prior values
     error_prior = error;
     integral_prior = integral;

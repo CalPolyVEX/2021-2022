@@ -1,4 +1,5 @@
 #include "main.h"
+#include "robotDriver.h"
 
 #define LEFT_WHEELS_1_PORT 1
 #define LEFT_WHEELS_2_PORT 4
@@ -12,6 +13,10 @@
 
 #define ERROR_BOUND_DRIVE 0.001
 #define ERROR_BOUND_TURN 0.1
+
+//RobotDriver
+RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, (4 * M_PI));
+
 
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -33,13 +38,13 @@ pros::Imu gyro (GYRO_PORT);
 /**
 Utility functions
 */
-double compare_rotations(double rot_i, double rot_f, int dir) {
-	double difference = rot_f - rot_i;
-	while (difference * dir < 0) {
-		difference += 360 * dir;
-	}
-	return difference;
-}
+// double compare_rotations(double rot_i, double rot_f, int dir) {
+// 	double difference = rot_f - rot_i;
+// 	while (difference * dir < 0) {
+// 		difference += 360 * dir;
+// 	}
+// 	return difference;
+// }
 
 /**
  * A callback function for LLEMU's center button.
@@ -57,19 +62,19 @@ void on_center_button() {
 	}
 }
 
-double clamp(double val, double max, double min) {
-	double sign = 1;
-	if (val < 0) {
-		sign = -1;
-	}
-	if (abs(val) < min) {
-		return min * sign;
-	} else if (abs(val) > max) {
-		return max * sign;
-	} else {
-		return val;
-	}
-}
+// double clamp(double val, double max, double min) {
+// 	double sign = 1;
+// 	if (val < 0) {
+// 		sign = -1;
+// 	}
+// 	if (abs(val) < min) {
+// 		return min * sign;
+// 	} else if (abs(val) > max) {
+// 		return max * sign;
+// 	} else {
+// 		return val;
+// 	}
+// }
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -162,63 +167,63 @@ void competition_initialize() {}
 	 }
  }
 
- void turnPID(double desired) {
-	 // constants for PID calculations
-	 const double maxSpeed = 128;
-	 const double minSpeed = 13;
-	 const int final_iterations =  8; //how many times to run within the error bound
-	 const double dT = 10.0000; //dT is the milliseconds between loops
-	 const double kP =  2.5000; //kP is the most useful part for position PID
-	 const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
-	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
-	 // initialize values to track between loops
-	 double error = ERROR_BOUND_TURN * 2;
-	 double error_prior = 0;
-	 double integral_prior = 0;
-	 double extra_iterations = final_iterations;
-	 // everything from here on out is measured in degrees
-	 double initial = gyro.get_yaw();
-	 while (extra_iterations > 0) {
-		 if (abs(error) < ERROR_BOUND_TURN) {
-			 extra_iterations -= 1;
-		 } else {
-			 extra_iterations = final_iterations;
-		 }
-		 // calculate known distances
-		 double actual = gyro.get_yaw() - initial;
-		 error = desired - actual;
-		 //sign correct error
-		 while (error < -180) {
-			 error += 360;
-		 }
-		 while (error > 180) {
-			 error -= 360;
-		 }
-		 // calculate I and D
-		 double integral = integral_prior + (error*dT); // sum of error
-		 double derivative = (error - error_prior)/dT; // change in error over time
-		 // using PID constants, calculate output
-		 double output = kP * error + kI * integral + kD * derivative;
-		 pros::lcd::set_text(2, "initial: " + std::to_string(initial));
-		 pros::lcd::set_text(3, "actual: " + std::to_string(actual));
-		 pros::lcd::set_text(4, "desired: " + std::to_string(desired));
-		 pros::lcd::set_text(5, "Error: " + std::to_string(error));
-		 pros::lcd::set_text(6, "Output: " + std::to_string(output));
-		 // clamp output to motor-compatible values
-		 output = clamp(output, maxSpeed, minSpeed);
-		 pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
-		 // set motors to calculated output
-		 left_mtr_1 = output;
-		 left_mtr_2 = output;
-		 right_mtr_1 = output;
-		 right_mtr_2 = output;
-		 // record new prior values
-		 error_prior = error;
-		 integral_prior = integral;
-		 // delay by dT
-		 pros::delay(dT);
-	 }
- }
+ // void turnPID(double desired) {
+	//  // constants for PID calculations
+	//  const double maxSpeed = 128;
+	//  const double minSpeed = 13;
+	//  const int final_iterations =  8; //how many times to run within the error bound
+	//  const double dT = 10.0000; //dT is the milliseconds between loops
+	//  const double kP =  2.5000; //kP is the most useful part for position PID
+	//  const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
+	//  const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
+	//  // initialize values to track between loops
+	//  double error = ERROR_BOUND_TURN * 2;
+	//  double error_prior = 0;
+	//  double integral_prior = 0;
+	//  double extra_iterations = final_iterations;
+	//  // everything from here on out is measured in degrees
+	//  double initial = gyro.get_yaw();
+	//  while (extra_iterations > 0) {
+	// 	 if (abs(error) < ERROR_BOUND_TURN) {
+	// 		 extra_iterations -= 1;
+	// 	 } else {
+	// 		 extra_iterations = final_iterations;
+	// 	 }
+	// 	 // calculate known distances
+	// 	 double actual = gyro.get_yaw() - initial;
+	// 	 error = desired - actual;
+	// 	 //sign correct error
+	// 	 while (error < -180) {
+	// 		 error += 360;
+	// 	 }
+	// 	 while (error > 180) {
+	// 		 error -= 360;
+	// 	 }
+	// 	 // calculate I and D
+	// 	 double integral = integral_prior + (error*dT); // sum of error
+	// 	 double derivative = (error - error_prior)/dT; // change in error over time
+	// 	 // using PID constants, calculate output
+	// 	 double output = kP * error + kI * integral + kD * derivative;
+	// 	 pros::lcd::set_text(2, "initial: " + std::to_string(initial));
+	// 	 pros::lcd::set_text(3, "actual: " + std::to_string(actual));
+	// 	 pros::lcd::set_text(4, "desired: " + std::to_string(desired));
+	// 	 pros::lcd::set_text(5, "Error: " + std::to_string(error));
+	// 	 pros::lcd::set_text(6, "Output: " + std::to_string(output));
+	// 	 // clamp output to motor-compatible values
+	// 	 // output = clamp(output, maxSpeed, minSpeed);
+	// 	 pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
+	// 	 // set motors to calculated output
+	// 	 left_mtr_1 = output;
+	// 	 left_mtr_2 = output;
+	// 	 right_mtr_1 = output;
+	// 	 right_mtr_2 = output;
+	// 	 // record new prior values
+	// 	 error_prior = error;
+	// 	 integral_prior = integral;
+	// 	 // delay by dT
+	// 	 pros::delay(dT);
+	//  }
+ // }
 
 void autonomous() {}
 
@@ -282,31 +287,9 @@ void opcontrol() {
 		}
 
 		if (master.get_digital(DIGITAL_X) == 1) {
-			turnPID(-90);
+			robo->turnPID(-90);
 		}
 
-		// double current_rotation = gyro.get_yaw();
-		// double rotation_difference = compare_rotations(pre_turn_rotation, current_rotation, turning);
-		// double turnAmount = 90.0;
-		// if (turning != 0 && std::abs(rotation_difference) < turnAmount) {
-		// 	double throttle = 0;
-		// 	/*
-		// 	This spaghetti code throttles the turning speed
-		// 	It looks at the remaining amount of turning required and scales the throttle amount
-		// 	*/
-		// 	if (turnAmount - std::abs(rotation_difference) < turnAmount * 0.6) {
-		// 		throttle = ((25 - 15) / (turnAmount * 0.6)) * ((turnAmount * 0.6) - (turnAmount - std::abs(rotation_difference)));
-		// 	}
-		// 	left_mtr_1 = (25 - throttle) * turning;
-		// 	left_mtr_2 = (25 - throttle) * turning;
-		// 	right_mtr_1 = (25 - throttle) * turning;
-		// 	right_mtr_2 = (25 - throttle) * turning;
-		// } else {
-		// 	turning = 0;
-		// }
-		//print stuff
-		// double gyroVal = gyro.get_yaw();
-		// pros::lcd::set_text(1, "Opcontrol loop"); //std::to_string(rotation_difference)
 		//delay to save resources
 		pros::delay(20);
 	}
