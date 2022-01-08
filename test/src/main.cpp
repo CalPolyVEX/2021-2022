@@ -83,6 +83,10 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	robo->configTurnPID(2.5, 0, 0, 10);
+	robo->configPositionPID(65, 0, 0, 10);
+
+
 	pros::lcd::initialize();
 	//pros::lcd::set_text(1, "Hello PROS User!");
 
@@ -120,52 +124,52 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-
- void positionPID(double desired_dist_inches) {
-	 // constants for PID calculations
-	 const double maxSpeed = 128;
-	 const double dT = 10.0000; //dT is the milliseconds between loops
-	 const double kP = 65.0000; //kP is the most useful part for position PID
-	 const double kI =  0.0100; //kI, in this case, helps ensure movement towards the end
-	 const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
-	 // initialize values to track between loops
-	 double error = ERROR_BOUND_DRIVE * 2;
-	 double error_prior = 0;
-	 double integral_prior = 0;
-	 // calculate wheel circumference
-	 const double circumference = (4 * M_PI); //units: inches
-	 // everything from here on out is measured in revolutions
-	 double desired = desired_dist_inches / circumference;
-	 left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
-	 double initialMotorPosition = left_mtr_1.get_position();
-	 while (abs(error) > ERROR_BOUND_DRIVE) {
-		 // calculate known distances
-		 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
-		 error = desired - actual;
-		 // calculate I and D
-		 double integral = integral_prior + (error*dT); // sum of error
-		 double derivative = (error - error_prior)/dT; // change in error over time
-		 // using PID constants, calculate output
-		 double output = kP * error + kI * integral + kD * derivative;
-		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
-		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
-		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
-		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
-		 // clamp output to motor-compatible values
-		 output = fmin(fmax(output, -maxSpeed), maxSpeed);
-		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
-		 // set motors to calculated output
-		 left_mtr_1 = output;
-		 left_mtr_2 = output;
-		 right_mtr_1 = -output;
-		 right_mtr_2 = -output;
-		 // record new prior values
-		 error_prior = error;
-		 integral_prior = integral;
-		 // delay by dT
-		 pros::delay(dT);
-	 }
- }
+ //
+ // void positionPID(double desired_dist_inches) {
+	//  // constants for PID calculations
+	//  const double maxSpeed = 128;
+	//  const double dT = 10.0000; //dT is the milliseconds between loops
+	//  const double kP = 65.0000; //kP is the most useful part for position PID
+	//  const double kI =  0.0100; //kI, in this case, helps ensure movement towards the end
+	//  const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
+	//  // initialize values to track between loops
+	//  double error = ERROR_BOUND_DRIVE * 2;
+	//  double error_prior = 0;
+	//  double integral_prior = 0;
+	//  // calculate wheel circumference
+	//  const double circumference = (4 * M_PI); //units: inches
+	//  // everything from here on out is measured in revolutions
+	//  double desired = desired_dist_inches / circumference;
+	//  left_mtr_1.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
+	//  double initialMotorPosition = left_mtr_1.get_position();
+	//  while (abs(error) > ERROR_BOUND_DRIVE) {
+	// 	 // calculate known distances
+	// 	 double actual = (left_mtr_1.get_position()) - initialMotorPosition;
+	// 	 error = desired - actual;
+	// 	 // calculate I and D
+	// 	 double integral = integral_prior + (error*dT); // sum of error
+	// 	 double derivative = (error - error_prior)/dT; // change in error over time
+	// 	 // using PID constants, calculate output
+	// 	 double output = kP * error + kI * integral + kD * derivative;
+	// 	 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
+	// 	 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
+	// 	 pros::lcd::set_text(4, "Error: " + std::to_string(error));
+	// 	 pros::lcd::set_text(5, "Output: " + std::to_string(output));
+	// 	 // clamp output to motor-compatible values
+	// 	 output = fmin(fmax(output, -maxSpeed), maxSpeed);
+	// 	 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
+	// 	 // set motors to calculated output
+	// 	 left_mtr_1 = output;
+	// 	 left_mtr_2 = output;
+	// 	 right_mtr_1 = -output;
+	// 	 right_mtr_2 = -output;
+	// 	 // record new prior values
+	// 	 error_prior = error;
+	// 	 integral_prior = integral;
+	// 	 // delay by dT
+	// 	 pros::delay(dT);
+	//  }
+ // }
 
  // void turnPID(double desired) {
 	//  // constants for PID calculations
@@ -283,7 +287,7 @@ void opcontrol() {
 		// }
 
 		if (master.get_digital(DIGITAL_B) == 1) {
-			positionPID(20);
+			robo->positionPID(20);
 		}
 
 		if (master.get_digital(DIGITAL_X) == 1) {

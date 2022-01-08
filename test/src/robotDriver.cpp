@@ -1,4 +1,6 @@
 #include "robotDriver.h"
+
+#define ERROR_BOUND_DRIVE 0.001
 #define ERROR_BOUND_TURN 0.1
 
 RobotDriver::RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int backLeftMotorPort, int backRightMotorPort, int gyroPort, double wheelCirc)
@@ -7,6 +9,24 @@ RobotDriver::RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int ba
 {
   // pros::Imu gyro(gyroPort);
   wheelCircumference = wheelCirc;
+
+  turnPIDdT = 10.0000;
+  turnPIDkP =  2.5000;
+  turnPIDkI =  0.0000;
+  turnPIDkD =  0.0000;
+}
+void RobotDriver::configTurnPID(double kP, double kI, double kD, double dT) {
+  this->turnPIDdT = dT;
+  this->turnPIDkP = kP;
+  this->turnPIDkI = kI;
+  this->turnPIDkD = kD;
+}
+
+void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) {
+  this->positionPIDdT = dT;
+  this->positionPIDkP = kP;
+  this->positionPIDkI = kI;
+  this->positionPIDkD = kD;
 }
 
 double clamp(double val, double max, double min) {
@@ -23,15 +43,13 @@ double clamp(double val, double max, double min) {
 	}
 }
 
+
+
 void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
   const double maxSpeed = 128;
   const double minSpeed = 13;
   const int final_iterations =  8; //how many times to run within the error bound
-  const double dT = 10.0000; //dT is the milliseconds between loops
-  const double kP =  2.5000; //kP is the most useful part for position PID
-  const double kI =  0.0000; //kI, in this case, helps ensure movement towards the end
-  const double kD =  0.0000; //kD usually isn't helpful in Vex PID in general
   // initialize values to track between loops
   double error = ERROR_BOUND_TURN * 2;
   double error_prior = 0;
@@ -56,10 +74,10 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
       error -= 360;
     }
     // calculate I and D
-    double integral = integral_prior + (error*dT); // sum of error
-    double derivative = (error - error_prior)/dT; // change in error over time
+    double integral = integral_prior + (error*this->turnPIDdT); // sum of error
+    double derivative = (error - error_prior)/this->turnPIDdT; // change in error over time
     // using PID constants, calculate output
-    double output = kP * error + kI * integral + kD * derivative;
+    double output = this->turnPIDkP * error + this->turnPIDkI * integral + this->turnPIDkD * derivative;
     pros::lcd::set_text(2, "initial: " + std::to_string(initial));
     pros::lcd::set_text(3, "actual: " + std::to_string(actual));
     pros::lcd::set_text(4, "desired: " + std::to_string(desiredTurnAngle));
@@ -77,6 +95,48 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     error_prior = error;
     integral_prior = integral;
     // delay by dT
-    pros::delay(dT);
+    pros::delay(this->turnPIDdT);
   }
 }
+
+
+
+ void RobotDriver::positionPID(double desired_dist_inches) {
+	 // constants for PID calculations
+	 const double maxSpeed = 128;
+	 // initialize values to track between loops
+	 double error = ERROR_BOUND_DRIVE * 2;
+	 double error_prior = 0;
+	 double integral_prior = 0;
+	 // everything from here on out is measured in revolutions
+	 double desired = desired_dist_inches / this->wheelCircumference;
+	 this->frontLeftMotor.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
+	 double initialMotorPosition = this->frontLeftMotor.get_position();
+	 while (abs((int)error) > ERROR_BOUND_DRIVE) {
+		 // calculate known distances
+		 double actual = (this->frontLeftMotor.get_position()) - initialMotorPosition;
+		 error = desired - actual;
+		 // calculate I and D
+		 double integral = integral_prior + (error*this->positionPIDdT); // sum of error
+		 double derivative = (error - error_prior)/this->positionPIDdT; // change in error over time
+		 // using PID constants, calculate output
+		 double output = this->positionPIDkP * error + this->positionPIDkI * integral + this->positionPIDkD * derivative;
+		 pros::lcd::set_text(2, "integral: " + std::to_string(integral));
+		 pros::lcd::set_text(3, "derivative: " + std::to_string(derivative));
+		 pros::lcd::set_text(4, "Error: " + std::to_string(error));
+		 pros::lcd::set_text(5, "Output: " + std::to_string(output));
+		 // clamp output to motor-compatible values
+		 output = fmin(fmax(output, -maxSpeed), maxSpeed);
+		 pros::lcd::set_text(6, "Clamped: " + std::to_string(output));
+		 // set motors to calculated output
+		 this->frontLeftMotor = output;
+		 this->backLeftMotor = output;
+		 this->frontRightMotor = -output;
+		 this->backRightMotor = -output;
+		 // record new prior values
+		 error_prior = error;
+		 integral_prior = integral;
+		 // delay by dT
+		 pros::delay(this->positionPIDdT);
+	 }
+ }

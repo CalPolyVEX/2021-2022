@@ -9,8 +9,22 @@ class RobotDriver {
   pros::Imu gyro;
   double wheelCircumference;
 
+  double turnPIDkP =  2.5000;
+  double turnPIDkI =  0.0000;
+  double turnPIDkD =  0.0000;
+  double turnPIDdT = 10.0000;
+
+  double positionPIDkP = 65.0000;
+  double positionPIDkI =  0.0000;
+  double positionPIDkD =  0.0000;
+  double positionPIDdT = 10.0000;
+
   public:
-  //RobotDriver(std::uint8_t frontLeftMotorPort, std::uint8_t frontRightMotorPort, std::uint8_t backLeftMotorPort, std::uint8_t backRightMotorPort, std::uint8_t gyroPort, double wheelCirc);
   RobotDriver(int frontLeftMotorPort, int frontRightMotorPort, int backLeftMotorPort, int backRightMotorPort, int gyroPort, double wheelCirc);
+
+  void configTurnPID(double kP, double kI, double kD, double dT);
   void turnPID(double desiredTurnAngle);
+
+  void configPositionPID(double kP, double kI, double kD, double dT);
+  void positionPID(double desired_dist_inches);
 };
