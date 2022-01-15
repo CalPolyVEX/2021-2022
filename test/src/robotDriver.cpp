@@ -171,6 +171,6 @@ void RobotDriver::encoderTest() {
   //    } else if (countTick == -100) {
   //      countTick = 0;
   //    }
-      pros::lcd::set_text(4, "degrees: " + std::to_string(countTick / 48 * 360));
+      pros::lcd::set_text(4, "degrees: " + std::to_string(countTick * 3.6));
     }
 }
