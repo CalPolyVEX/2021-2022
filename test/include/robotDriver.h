@@ -11,9 +11,9 @@ class RobotDriver {
   pros::Motor backRightMotor;
   pros::Imu gyro;
 
-  pros::ADIDigitalIn a;
-  pros::ADIDigitalIn b;
-  pros::ADIDigitalIn i;
+  // pros::ADIDigitalIn a;
+  // pros::ADIDigitalIn b;
+  // pros::ADIDigitalIn i;
   int aVal;
   int bVal;
   int iVal;
