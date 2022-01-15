@@ -21,19 +21,19 @@ RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEF
 //controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 //drive motors
-pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
-pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
-pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
-pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
+// pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
+// pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
+// pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
+// pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
 //claw motor
-pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
+// pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
 //pistons
-pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
-pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
+// pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
+// pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
 //touch touch sensor
-pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
+// pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
 //gyro
-pros::Imu gyro (GYRO_PORT);
+// pros::Imu gyro (GYRO_PORT);
 
 /**
 Utility functions
@@ -146,10 +146,10 @@ void opcontrol() {
 	  //get joystick values, and use those values to drive
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = -master.get_analog(ANALOG_RIGHT_Y);
-		left_mtr_1 = left;
-		left_mtr_2 = left;
-		right_mtr_1 = right;
-		right_mtr_2 = right;
+		// left_mtr_1 = left;
+		// left_mtr_2 = left;
+		// right_mtr_1 = right;
+		// right_mtr_2 = right;
 
 		robo->encoderTest();
 

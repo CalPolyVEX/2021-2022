@@ -20,6 +20,10 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   turnPIDkP =  2.5000;
   turnPIDkI =  0.0000;
   turnPIDkD =  0.0000;
+
+  pros::c::adi_port_set_config(1, (pros::adi_port_config_e_t) 2);
+  pros::c::adi_port_set_config(2, (pros::adi_port_config_e_t) 2);
+  pros::c::adi_port_set_config(3, (pros::adi_port_config_e_t) 2);
 }
 // utility functions
 double clamp(double val, double max, double min) {
@@ -149,4 +153,24 @@ void RobotDriver::encoderTest() {
     pros::lcd::set_text(1, "A: " + std::to_string(aVal));
     pros::lcd::set_text(2, "B: " + std::to_string(bVal));
     pros::lcd::set_text(3, "I: " + std::to_string(iVal));
+
+    if(aVal != precTick)
+    {
+      if(aVal != bVal)
+      {
+        countTick = countTick + aVal;
+        precTick = aVal;
+      }
+      else
+      {
+        countTick = countTick - aVal;
+        precTick = aVal;
+      }
+  //    if (countTick == 100) {
+  //      countTick = 0;
+  //    } else if (countTick == -100) {
+  //      countTick = 0;
+  //    }
+      pros::lcd::set_text(4, "degrees: " + std::to_string(countTick / 48 * 360));
+    }
 }

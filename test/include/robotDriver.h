@@ -14,6 +14,13 @@ class RobotDriver {
   // pros::ADIDigitalIn a;
   // pros::ADIDigitalIn b;
   // pros::ADIDigitalIn i;
+  int countTick = 0;
+  int countIndex = 0;
+  int precTick = 0;
+  int precIndex = 0;
+  int tick = 0;
+  int tickB =0;
+  int index = 0;
   int aVal;
   int bVal;
   int iVal;
