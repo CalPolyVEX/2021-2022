@@ -151,6 +151,8 @@ void opcontrol() {
 		right_mtr_1 = right;
 		right_mtr_2 = right;
 
+		robo->encoderTest();
+
 		//open/close claw based on left triggers
 		// if (master.get_digital(DIGITAL_L1)) {
     //   claw.move_velocity(100);

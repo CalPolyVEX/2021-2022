@@ -11,6 +11,13 @@ class RobotDriver {
   pros::Motor backRightMotor;
   pros::Imu gyro;
 
+  pros::ADIDigitalIn a;
+  pros::ADIDigitalIn b;
+  pros::ADIDigitalIn i;
+  int aVal;
+  int bVal;
+  int iVal;
+
   double wheelCircumference;
 
   double turnPIDkP =  2.5000;
@@ -33,4 +40,6 @@ class RobotDriver {
 
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
+
+  void encoderTest();
 };
