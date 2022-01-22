@@ -16,8 +16,8 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(countTick);
   analogWrite(encoder1Out, countTick);
+  Serial.println(countTick);
   delay(500);
 }
 
