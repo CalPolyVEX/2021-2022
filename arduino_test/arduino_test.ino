@@ -16,7 +16,6 @@ void setup() {
 }
 
 void loop() {
-  analogWrite(encoder1Out, countTick);
   Serial.println(countTick);
   delay(500);
 }
@@ -27,4 +26,5 @@ void computeRotation() {
   } else {
     countTick -= 1;
   }
+  analogWrite(encoder1Out, countTick);
 }
