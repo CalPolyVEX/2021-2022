@@ -21,9 +21,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   turnPIDkI =  0.0000;
   turnPIDkD =  0.0000;
 
-  pros::c::adi_port_set_config(1, (pros::adi_port_config_e_t) 2);
-  pros::c::adi_port_set_config(2, (pros::adi_port_config_e_t) 2);
-  pros::c::adi_port_set_config(3, (pros::adi_port_config_e_t) 2);
+  // while (arduino.read_byte());
 }
 // utility functions
 double clamp(double val, double max, double min) {
@@ -148,16 +146,19 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 
 void RobotDriver::encoderTest() {
   pros::lcd::set_text(1, "-- Encoder Test --");
-  uint64_t arduinoVal;
-  int packetsAvail = (arduino.get_read_avail() / 8);
+  uint32_t arduinoVal;
+  int packetsAvail = (arduino.get_read_avail() / 4);
   if (packetsAvail > 0) {
     while (packetsAvail) {
-      arduino.read((uint8_t *)&arduinoVal, 8);
+      arduino.read((uint8_t *)&arduinoVal, 4);
       packetsAvail --;
     }
-    encoderVal = arduinoVal;
+    encoderVal1 = *(((int16_t *)(&arduinoVal)));
+    encoderVal2 = *(((int16_t *)(&arduinoVal)) + 1);
   } else {
     return;
   }
-	pros::lcd::set_text(3, "Encoder Val: " + std::to_string(encoderVal));
+	pros::lcd::set_text(2, "Encoder 1 Val: " + std::to_string(encoderVal1));
+	pros::lcd::set_text(3, "Encoder 2 Val: " + std::to_string(encoderVal2));
+	pros::lcd::set_text(4, "Raw Val: " + std::to_string(arduinoVal));
 }

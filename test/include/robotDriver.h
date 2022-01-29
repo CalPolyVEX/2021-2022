@@ -12,7 +12,8 @@ class RobotDriver {
   pros::Serial arduino;
   pros::Imu gyro;
 
-  uint64_t encoderVal = 0;
+  int16_t encoderVal1 = 0;
+  int16_t encoderVal2 = 0;
 
   double wheelCircumference;
 
