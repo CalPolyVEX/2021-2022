@@ -2,6 +2,7 @@
 #define encoder1B 2
 #define encoder1Out 11
 #define ppr 100
+#define baudrate 115200
 
 int countTick = 0;
 int tickA = 0;
@@ -12,11 +13,11 @@ void setup() {
   pinMode(encoder1B, INPUT);
   pinMode(encoder1Out, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(encoder1A), computeRotation, RISING);
-  Serial.begin(9600);
+  Serial.begin(baudrate);
 }
 
 void loop() {
-  Serial.println(countTick);
+//  Serial.write(countTick);
   delay(500);
 }
 
@@ -26,5 +27,5 @@ void computeRotation() {
   } else {
     countTick -= 1;
   }
-  analogWrite(encoder1Out, countTick);
+  Serial.write(countTick);
 }
