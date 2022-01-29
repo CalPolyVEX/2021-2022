@@ -1,6 +1,7 @@
-#define encoder1A 3
-#define encoder1B 2
-#define encoder1Out 11
+#define encoder1A 2
+#define encoder1B 12
+#define encoder2A 3
+#define encoder2B 13
 #define ppr 100
 #define baudrate 115200
 
@@ -10,18 +11,16 @@ int16_t countTick2 = 0;
 void setup() {
   pinMode(encoder1A, INPUT);
   pinMode(encoder1B, INPUT);
-  pinMode(encoder1Out, OUTPUT);
+  pinMode(encoder2A, INPUT);
+  pinMode(encoder2B, INPUT);
   attachInterrupt(digitalPinToInterrupt(encoder1A), computeRotation1, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoder2A), computeRotation2, RISING);
   Serial.begin(baudrate);
+  while(Serial.available()) Serial.read();
 }
 
 void loop() {
-//  Serial.write(countTick);
-  char t;
-  while(Serial.available()) Serial.read();
-  while (1) {
-    delay(500);
-  }
+  delay(500);
 }
 
 void computeRotation1() {
@@ -29,6 +28,16 @@ void computeRotation1() {
     countTick1 += 1;
   } else {
     countTick1 -= 1;
+  }
+  writeToVex();
+}
+
+void computeRotation2() {
+  Serial.println("ENCODER 2");
+  if (digitalRead(encoder2B)) {
+    countTick2 += 1;
+  } else {
+    countTick2 -= 1;
   }
   writeToVex();
 }

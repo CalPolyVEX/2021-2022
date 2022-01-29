@@ -12,8 +12,8 @@ class RobotDriver {
   pros::Serial arduino;
   pros::Imu gyro;
 
-  int16_t encoderVal1 = 0;
-  int16_t encoderVal2 = 0;
+  int numEncoders = 2;
+  int encoderVal[4] = {0, 0, 0, 0};
 
   double wheelCircumference;
 
@@ -38,5 +38,5 @@ class RobotDriver {
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
 
-  void encoderTest();
+  int16_t readEncoder(int index);
 };

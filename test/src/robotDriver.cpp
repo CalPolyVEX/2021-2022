@@ -144,21 +144,18 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 	 }
 }
 
-void RobotDriver::encoderTest() {
-  pros::lcd::set_text(1, "-- Encoder Test --");
+int16_t RobotDriver::readEncoder(int index) {
   uint32_t arduinoVal;
-  int packetsAvail = (arduino.get_read_avail() / 4);
+  int packetsAvail = (arduino.get_read_avail() / (numEncoders * 2));
+  // pros::lcd::set_text(3, "packets")
   if (packetsAvail > 0) {
     while (packetsAvail) {
-      arduino.read((uint8_t *)&arduinoVal, 4);
+      arduino.read((uint8_t *)&arduinoVal, (numEncoders * 2));
       packetsAvail --;
     }
-    encoderVal1 = *(((int16_t *)(&arduinoVal)));
-    encoderVal2 = *(((int16_t *)(&arduinoVal)) + 1);
-  } else {
-    return;
+    for (int i = 0; i < numEncoders; i++) {
+      encoderVal[i] = *(((int16_t *)(&arduinoVal)) + i);
+    }
   }
-	pros::lcd::set_text(2, "Encoder 1 Val: " + std::to_string(encoderVal1));
-	pros::lcd::set_text(3, "Encoder 2 Val: " + std::to_string(encoderVal2));
-	pros::lcd::set_text(4, "Raw Val: " + std::to_string(arduinoVal));
+	return encoderVal[index - 1];
 }
