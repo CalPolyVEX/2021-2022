@@ -33,7 +33,6 @@ void computeRotation1() {
 }
 
 void computeRotation2() {
-  Serial.println("ENCODER 2");
   if (digitalRead(encoder2B)) {
     countTick2 += 1;
   } else {
