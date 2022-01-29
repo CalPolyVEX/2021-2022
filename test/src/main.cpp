@@ -144,8 +144,8 @@ void autonomous() {}
 void opcontrol() {
 	while (1) {
 	  //get joystick values, and use those values to drive
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = -master.get_analog(ANALOG_RIGHT_Y);
+		// int left = master.get_analog(ANALOG_LEFT_Y);
+		// int right = -master.get_analog(ANALOG_RIGHT_Y);
 		// left_mtr_1 = left;
 		// left_mtr_2 = left;
 		// right_mtr_1 = right;
@@ -174,10 +174,10 @@ void opcontrol() {
     // }
 
 		if (master.get_digital(DIGITAL_B) == 1) {
-			robo->positionPID(20);
+			// robo->positionPID(20);
 		}
 		if (master.get_digital(DIGITAL_X) == 1) {
-			robo->turnPID(-90);
+			// robo->turnPID(-90);
 		}
 
 		//delay to save resources

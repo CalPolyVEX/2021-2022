@@ -6,7 +6,7 @@
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
- gyro(gyroPort)
+ gyro(gyroPort), arduino(20, 115200)
 {
   int a = 4;
   chassis = okapi::ChassisControllerBuilder()
@@ -147,30 +147,17 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 }
 
 void RobotDriver::encoderTest() {
-    aVal = pros::c::adi_port_get_value(1);
-    bVal = pros::c::adi_port_get_value(2);
-    iVal = pros::c::adi_port_get_value(3);
-    pros::lcd::set_text(1, "A: " + std::to_string(aVal));
-    pros::lcd::set_text(2, "B: " + std::to_string(bVal));
-    pros::lcd::set_text(3, "I: " + std::to_string(iVal));
-
-    if(aVal != precTick)
-    {
-      if(aVal != bVal)
-      {
-        countTick = countTick + aVal;
-        precTick = aVal;
-      }
-      else
-      {
-        countTick = countTick - aVal;
-        precTick = aVal;
-      }
-  //    if (countTick == 100) {
-  //      countTick = 0;
-  //    } else if (countTick == -100) {
-  //      countTick = 0;
-  //    }
-      pros::lcd::set_text(4, "degrees: " + std::to_string(countTick * 3.6));
+  pros::lcd::set_text(1, "-- Encoder Test --");
+  uint64_t arduinoVal;
+  int packetsAvail = (arduino.get_read_avail() / 8);
+  if (packetsAvail > 0) {
+    while (packetsAvail) {
+      arduino.read((uint8_t *)&arduinoVal, 8);
+      packetsAvail --;
     }
+    encoderVal = arduinoVal;
+  } else {
+    return;
+  }
+	pros::lcd::set_text(3, "Encoder Val: " + std::to_string(encoderVal));
 }
