@@ -13,7 +13,7 @@ class RobotDriver {
   pros::Imu gyro;
 
   int numEncoders = 3;
-  int encoderVal[4] = {0, 0, 0, 0};
+  vector<int> encoderVals;
 
   double wheelCircumference;
 
@@ -30,7 +30,7 @@ class RobotDriver {
   std::shared_ptr<okapi::ChassisController> chassis;
 
   public:
-  RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad);
+  RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad, int encoderCount);
 
   void configTurnPID(double kP, double kI, double kD, double dT);
   void turnPID(double desiredTurnAngle);

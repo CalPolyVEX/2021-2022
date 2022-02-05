@@ -4,24 +4,26 @@
 #define ERROR_BOUND_DRIVE 0.001
 #define ERROR_BOUND_TURN 0.1
 // class
-RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
+RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad, int encoderCount)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
  gyro(gyroPort), arduino(20, 115200)
 {
-  int a = 4;
+  //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
   .withMotors({frontLeftMotorPort, backLeftMotorPort}, {(int8_t)-frontRightMotorPort, (int8_t)-backRightMotorPort})
   .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
   .build();
-
+  //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;
-
+  //initialize list of encoder vals
+  numEncoders = encoderCount;
+  encoderVals.resize(numEncoders);
+  for (int i = 0; i < encoderCount; i++) encoderVals.pushBack(0);
+  //initialize PID constants for turning PID
   turnPIDdT = 10.0000;
   turnPIDkP =  2.5000;
   turnPIDkI =  0.0000;
   turnPIDkD =  0.0000;
-
-  // while (arduino.read_byte());
 }
 // utility functions
 double clamp(double val, double max, double min) {
@@ -147,7 +149,6 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 int16_t RobotDriver::readEncoder(int index) {
   uint32_t arduinoVal;
   int packetsAvail = (arduino.get_read_avail() / (numEncoders * 2));
-  // pros::lcd::set_text(3, "packets")
   if (packetsAvail > 0) {
     while (packetsAvail) {
       arduino.read((uint8_t *)&arduinoVal, (numEncoders * 2));
@@ -157,5 +158,6 @@ int16_t RobotDriver::readEncoder(int index) {
       encoderVal[i] = *(((int16_t *)(&arduinoVal)) + i);
     }
   }
+  if (index > numEncoders || index < 1) return 0;
 	return encoderVal[index - 1];
 }
