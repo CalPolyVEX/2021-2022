@@ -18,7 +18,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   //initialize list of encoder vals
   numEncoders = encoderCount;
   encoderVals.resize(numEncoders);
-  for (int i = 0; i < encoderCount; i++) encoderVals.pushBack(0);
+  for (int i = 0; i < encoderCount; i++) encoderVals.push_back(0);
   //initialize PID constants for turning PID
   turnPIDdT = 10.0000;
   turnPIDkP =  2.5000;
@@ -155,9 +155,9 @@ int16_t RobotDriver::readEncoder(int index) {
       packetsAvail --;
     }
     for (int i = 0; i < numEncoders; i++) {
-      encoderVal[i] = *(((int16_t *)(&arduinoVal)) + i);
+      encoderVals[i] = *(((int16_t *)(&arduinoVal)) + i);
     }
   }
   if (index > numEncoders || index < 1) return 0;
-	return encoderVal[index - 1];
+	return encoderVals[index - 1];
 }

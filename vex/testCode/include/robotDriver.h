@@ -13,7 +13,7 @@ class RobotDriver {
   pros::Imu gyro;
 
   int numEncoders = 3;
-  vector<int> encoderVals;
+  std::vector<int> encoderVals;
 
   double wheelCircumference;
 
