@@ -147,17 +147,35 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 }
 
 int16_t RobotDriver::readEncoder(int index) {
-  uint32_t arduinoVal;
-  int packetsAvail = (arduino.get_read_avail() / (numEncoders * 2));
-  if (packetsAvail > 0) {
+  //allocate space such that we have two bytes per encoder, as well as an extra two bytes for packet alignment
+  uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * 2);
+  //count the number of packets available
+  int packetsAvail = (arduino.get_read_avail() / (1 + numEncoders * 2));
+  if (packetsAvail) {
+    //byte alignment; if only one byte is available, the first readings will be misaligned
+    int misalignedBytes = 0;
+    uint8_t *p = arduinoVals;
+    arduino.read(arduinoVals, (1 + numEncoders * 2));
+    packetsAvail --;
+    while (*p != 0x80) {
+      p ++;
+      misalignedBytes ++;
+    }
+    uint8_t temp;
+    for (int i = 0; i < misalignedBytes; i++) {
+      arduino.read(&temp, 1);
+    }
+    //discard extra packets
     while (packetsAvail) {
-      arduino.read((uint8_t *)&arduinoVal, (numEncoders * 2));
+      arduino.read(arduinoVals, (1 + numEncoders * 2));
       packetsAvail --;
     }
+    //update encoder vals
     for (int i = 0; i < numEncoders; i++) {
-      encoderVals[i] = *(((int16_t *)(&arduinoVal)) + i);
+      encoderVals[i] = *(((int16_t *)(arduinoVals + 1)) + i);
     }
   }
+  free(arduinoVals);
   if (index > numEncoders || index < 1) return 0;
 	return encoderVals[index - 1];
 }
