@@ -12,7 +12,7 @@ class RobotDriver {
   pros::Serial arduino;
   pros::Imu gyro;
 
-  int numEncoders = 3;
+  int numEncoders;
   std::vector<int> encoderVals;
 
   double wheelCircumference;
@@ -31,12 +31,12 @@ class RobotDriver {
 
   public:
   RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad, int encoderCount);
-
+  //PID stuff
   void configTurnPID(double kP, double kI, double kD, double dT);
   void turnPID(double desiredTurnAngle);
-
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
-
+  //Encoders
+  void configEncoders(int numE);
   int16_t readEncoder(int index);
 };

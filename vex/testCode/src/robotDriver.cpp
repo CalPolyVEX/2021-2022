@@ -16,14 +16,9 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;
   //initialize list of encoder vals
-  numEncoders = encoderCount;
-  encoderVals.resize(numEncoders);
-  for (int i = 0; i < encoderCount; i++) encoderVals.push_back(0);
+  configEncoders(encoderCount);
   //initialize PID constants for turning PID
-  turnPIDdT = 10.0000;
-  turnPIDkP =  2.5000;
-  turnPIDkI =  0.0000;
-  turnPIDkD =  0.0000;
+  configTurnPID(10, 2.5, 0, 0);
 }
 // utility functions
 double clamp(double val, double max, double min) {
@@ -51,6 +46,11 @@ void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) 
   this->positionPIDkP = kP;
   this->positionPIDkI = kI;
   this->positionPIDkD = kD;
+}
+void RobotDriver::configEncoders(int numE) {
+  this->numEncoders = numE;
+  this->encoderVals.resize(numE);
+  for (int i = 0; i < numE; i++) encoderVals.push_back(0);
 }
 // driving functions
 void RobotDriver::turnPID(double desiredTurnAngle) {
