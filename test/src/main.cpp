@@ -154,6 +154,7 @@ void opcontrol() {
 		// robo->encoderTest();
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
 		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->readEncoder(2)));
+		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->readEncoder(3)));
 
 		//open/close claw based on left triggers
 		// if (master.get_digital(DIGITAL_L1)) {

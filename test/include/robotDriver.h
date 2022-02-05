@@ -12,7 +12,7 @@ class RobotDriver {
   pros::Serial arduino;
   pros::Imu gyro;
 
-  int numEncoders = 2;
+  int numEncoders = 3;
   int encoderVal[4] = {0, 0, 0, 0};
 
   double wheelCircumference;
