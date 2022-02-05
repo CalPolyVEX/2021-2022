@@ -21,7 +21,7 @@ void setup() {
   
   attachInterrupt(digitalPinToInterrupt(encoder1A), computeRotation1, RISING);
   attachInterrupt(digitalPinToInterrupt(encoder2A), computeRotation2, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoder3A), computeRotation2, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoder3A), computeRotation3, RISING);
   
   Serial.begin(baudrate);
   while(Serial.available()) Serial.read();
@@ -59,6 +59,8 @@ void computeRotation3() {
 }
 
 void writeToVex() {
+  byte align = 0x80;
+  Serial.write(&align, 1);
   Serial.write((uint8_t *)&countTick1, 2);
   Serial.write((uint8_t *)&countTick2, 2);
   Serial.write((uint8_t *)&countTick3, 2);
