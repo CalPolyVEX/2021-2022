@@ -17,6 +17,8 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   wheelCircumference = wheelRad * M_PI;
   //calibrate gyro
   gyro.reset();
+  //size vectors
+  // this->armButtonPorts.resize(1);
 }
 // utility functions
 double clamp(double val, double min, double max) {
@@ -53,6 +55,14 @@ void RobotDriver::configEncoders(int numE, int ppr) {
   this->encoderPPR = ppr;
   for (int i = 0; i < numE; i++) encoderVals.push_back(0);
 }
+// void RobotDriver::addArmButton(int port1, int port2, int upButton, int downButton) {
+//   ArmButtonPorts newArmButton;
+//   newArmButton.port1 = port1;
+//   newArmButton.port2 = port2;
+//   newArmButton.upButton = upButton;
+//   newArmButton.downButton = downButton;
+//   this->armButtonPorts.push_back(newArmButton);
+// }
 // driving functions
 void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
@@ -108,6 +118,9 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
 }
 void RobotDriver::turnPIDAndRecalibrate(double desiredTurnAngle) {
   this->turnPID(desiredTurnAngle);
+  this->recalibrateGyro();
+}
+void RobotDriver::recalibrateGyro() {
   this->gyro.reset();
 }
 void RobotDriver::positionPID(double desired_dist_inches) {
@@ -203,6 +216,13 @@ void RobotDriver::tankDrive() {
   this->frontRightMotor = right;
   this->backRightMotor = right;
 }
+
+// void RobotDriver::armButtons() {
+//   int numButtons = this->armButtonPorts.size();
+//   for (int i = 0; i < numButtons; i++) {
+//
+//   }
+// }
 
 pros::Controller *RobotDriver::getController() {
   return &(this->controller);

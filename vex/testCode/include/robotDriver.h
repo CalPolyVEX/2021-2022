@@ -3,6 +3,13 @@
 #include "okapi/impl/device/motor/motorGroup.hpp"
 using namespace okapi;
 
+// typedef struct ArmButtonPorts {
+//   int port1;
+//   int port2;
+//   int upButton;
+//   int downButton;
+// } ArmButtonPorts;
+
 class RobotDriver {
   private:
   pros::Motor frontLeftMotor;
@@ -16,6 +23,8 @@ class RobotDriver {
   int numEncoders;
   std::vector<int> encoderVals;
   int encoderPPR;
+
+  // std::vector<ArmButtonPorts> armButtonPorts;
 
   double wheelCircumference;
 
@@ -41,6 +50,7 @@ class RobotDriver {
   void configTurnPID(double kP, double kI, double kD, double dT, int min, int max);
   void turnPID(double desiredTurnAngle);
   void turnPIDAndRecalibrate(double desiredTurnAngle);
+  void recalibrateGyro();
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
   //Encoders
@@ -50,4 +60,6 @@ class RobotDriver {
   int16_t readEncoder(int index); //updates encoder vals, and returns the specified val
   //Controller stuff
   void tankDrive();
+  // void addArmButton(int port1, int port2, int upButton, int downButton);
+  void armButtons();
 };
