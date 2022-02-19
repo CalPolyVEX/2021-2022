@@ -2,7 +2,7 @@
 #include "robotDriver.h"
 // define
 #define ERROR_BOUND_DRIVE 0.001
-#define ERROR_BOUND_TURN 0.1
+#define ERROR_BOUND_TURN 0.5
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
@@ -15,11 +15,11 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   .build();
   //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;
-  //initialize PID constants for turning PID
-  configTurnPID(10, 2.5, 0, 0);
+  //calibrate gyro
+  gyro.reset();
 }
 // utility functions
-double clamp(double val, double max, double min) {
+double clamp(double val, double min, double max) {
  double sign = 1;
  if (val < 0) {
    sign = -1;
@@ -33,11 +33,13 @@ double clamp(double val, double max, double min) {
  }
 }
 // getter/setter methods
-void RobotDriver::configTurnPID(double kP, double kI, double kD, double dT) {
+void RobotDriver::configTurnPID(double kP, double kI, double kD, double dT, int min, int max) {
   this->turnPIDdT = dT;
   this->turnPIDkP = kP;
   this->turnPIDkI = kI;
   this->turnPIDkD = kD;
+  this->turnPIDMinSpeed = min;
+  this->turnPIDMaxSpeed = max;
 }
 void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) {
   this->positionPIDdT = dT;
@@ -54,8 +56,6 @@ void RobotDriver::configEncoders(int numE, int ppr) {
 // driving functions
 void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
-  const double maxSpeed = 128;
-  const double minSpeed = 13;
   const int final_iterations =  8; //how many times to run within the error bound
   // initialize values to track between loops
   double error = ERROR_BOUND_TURN * 2;
@@ -72,6 +72,7 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     }
     // calculate known distances
     double actual = gyro.get_yaw() - initial;
+    pros::lcd::set_text(3, "actual: " + std::to_string(gyro.get_yaw()));
     error = desiredTurnAngle - actual;
     //sign correct error
     while (error < -180) {
@@ -85,14 +86,14 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     double derivative = (error - error_prior)/this->turnPIDdT; // change in error over time
     // using PID constants, calculate output
     double output = this->turnPIDkP * error + this->turnPIDkI * integral + this->turnPIDkD * derivative;
-    pros::lcd::set_text(2, "initial: " + std::to_string(initial));
-    pros::lcd::set_text(3, "actual: " + std::to_string(actual));
-    pros::lcd::set_text(4, "desired: " + std::to_string(desiredTurnAngle));
-    pros::lcd::set_text(5, "Error: " + std::to_string(error));
-    pros::lcd::set_text(6, "Output: " + std::to_string(output));
+    // pros::lcd::set_text(2, "initial: " + std::to_string(initial));
+    // pros::lcd::set_text(3, "actual: " + std::to_string(actual));
+    // pros::lcd::set_text(4, "desired: " + std::to_string(desiredTurnAngle));
+    // pros::lcd::set_text(5, "Error: " + std::to_string(error));
+    // pros::lcd::set_text(6, "Output: " + std::to_string(output));
     // clamp output to motor-compatible values
-    output = clamp(output, maxSpeed, minSpeed);
-    pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
+    output = clamp(output, this->turnPIDMinSpeed, this->turnPIDMaxSpeed);
+    // pros::lcd::set_text(7, "Clamped: " + std::to_string(output));
     // set motors to calculated output
     frontLeftMotor = output;
     backLeftMotor = output;
@@ -104,6 +105,10 @@ void RobotDriver::turnPID(double desiredTurnAngle) {
     // delay by dT
     pros::delay(this->turnPIDdT);
   }
+}
+void RobotDriver::turnPIDAndRecalibrate(double desiredTurnAngle) {
+  this->turnPID(desiredTurnAngle);
+  this->gyro.reset();
 }
 void RobotDriver::positionPID(double desired_dist_inches) {
 	 // constants for PID calculations

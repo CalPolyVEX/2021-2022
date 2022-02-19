@@ -23,6 +23,8 @@ class RobotDriver {
   double turnPIDkI =  0.0000;
   double turnPIDkD =  0.0000;
   double turnPIDdT = 10.0000;
+  int turnPIDMinSpeed = 15;
+  int turnPIDMaxSpeed = 128;
 
   double positionPIDkP = 65.0000;
   double positionPIDkI =  0.0000;
@@ -36,8 +38,9 @@ class RobotDriver {
   //Getters
   pros::Controller *getController();
   //PID stuff
-  void configTurnPID(double kP, double kI, double kD, double dT);
+  void configTurnPID(double kP, double kI, double kD, double dT, int min, int max);
   void turnPID(double desiredTurnAngle);
+  void turnPIDAndRecalibrate(double desiredTurnAngle);
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
   //Encoders
