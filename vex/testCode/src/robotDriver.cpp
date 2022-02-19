@@ -4,9 +4,9 @@
 #define ERROR_BOUND_DRIVE 0.001
 #define ERROR_BOUND_TURN 0.1
 // class
-RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad, int encoderCount)
+RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
- gyro(gyroPort), arduino(20, 115200)
+ gyro(gyroPort), arduino(20, 115200), controller(pros::E_CONTROLLER_MASTER)
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
@@ -15,8 +15,6 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   .build();
   //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;
-  //initialize list of encoder vals
-  configEncoders(encoderCount);
   //initialize PID constants for turning PID
   configTurnPID(10, 2.5, 0, 0);
 }
@@ -47,9 +45,10 @@ void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) 
   this->positionPIDkI = kI;
   this->positionPIDkD = kD;
 }
-void RobotDriver::configEncoders(int numE) {
+void RobotDriver::configEncoders(int numE, int ppr) {
   this->numEncoders = numE;
   this->encoderVals.resize(numE);
+  this->encoderPPR = ppr;
   for (int i = 0; i < numE; i++) encoderVals.push_back(0);
 }
 // driving functions
@@ -146,7 +145,7 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 	 }
 }
 
-int16_t RobotDriver::readEncoder(int index) {
+void RobotDriver::updateEncoderVals() {
   //allocate space such that we have two bytes per encoder, as well as an extra two bytes for packet alignment
   uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * 2);
   //count the number of packets available
@@ -157,6 +156,9 @@ int16_t RobotDriver::readEncoder(int index) {
     uint8_t *p = arduinoVals;
     arduino.read(arduinoVals, (1 + numEncoders * 2));
     packetsAvail --;
+    // Example Misalignment:
+    // [xx xx xx 0x80 xx xx xx]
+    // 3 byte misalignment
     while (*p != 0x80) {
       p ++;
       misalignedBytes ++;
@@ -176,6 +178,27 @@ int16_t RobotDriver::readEncoder(int index) {
     }
   }
   free(arduinoVals);
+}
+
+int16_t RobotDriver::getEncoderVal(int index) {
   if (index > numEncoders || index < 1) return 0;
-	return encoderVals[index - 1];
+  return encoderVals[index - 1] * 360 / this->encoderPPR;
+}
+
+int16_t RobotDriver::readEncoder(int index) {
+  updateEncoderVals();
+  return getEncoderVal(index);
+}
+
+void RobotDriver::tankDrive() {
+  int left = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+  int right = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
+  this->frontLeftMotor = left;
+  this->backLeftMotor = left;
+  this->frontRightMotor = right;
+  this->backRightMotor = right;
+}
+
+pros::Controller *RobotDriver::getController() {
+  return &(this->controller);
 }

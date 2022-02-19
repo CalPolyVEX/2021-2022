@@ -7,19 +7,14 @@
 #define RIGHT_WHEELS_2_PORT 3
 #define CLAW_PORT 13
 #define GYRO_PORT 15
-#define TOUCH_BUTTON_PORT 'A'
-#define PISTON_1_PORT 'B'
-#define PISTON_2_PORT 'C'
-
-#define ERROR_BOUND_DRIVE 0.001
-#define ERROR_BOUND_TURN 0.1
+#define WHEEL_RADIUS 4
+#define ENCODER_COUNT 3
+#define ENCODER_PPR 100
 
 //RobotDriver
-RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, 4, 3);
-
+RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
 
 //controller
-pros::Controller master(pros::E_CONTROLLER_MASTER);
 //drive motors
 // pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
 // pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
@@ -34,17 +29,6 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 // pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
 //gyro
 // pros::Imu gyro (GYRO_PORT);
-
-/**
-Utility functions
-*/
-// double compare_rotations(double rot_i, double rot_f, int dir) {
-// 	double difference = rot_f - rot_i;
-// 	while (difference * dir < 0) {
-// 		difference += 360 * dir;
-// 	}
-// 	return difference;
-// }
 
 /**
  * A callback function for LLEMU's center button.
@@ -62,20 +46,6 @@ void on_center_button() {
 	}
 }
 
-// double clamp(double val, double max, double min) {
-// 	double sign = 1;
-// 	if (val < 0) {
-// 		sign = -1;
-// 	}
-// 	if (abs(val) < min) {
-// 		return min * sign;
-// 	} else if (abs(val) > max) {
-// 		return max * sign;
-// 	} else {
-// 		return val;
-// 	}
-// }
-
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -85,14 +55,12 @@ void on_center_button() {
 void initialize() {
 	robo->configTurnPID(2.5, 0, 0, 10);
 	robo->configPositionPID(65, 0, 0, 10);
-
+	robo->configEncoders(ENCODER_COUNT, ENCODER_PPR);
 
 	pros::lcd::initialize();
-	//pros::lcd::set_text(1, "Hello PROS User!");
+	pros::lcd::set_text(1, "Robot Initialized :)");
 
 	pros::lcd::register_btn1_cb(on_center_button);
-
-	//pros::ADIDigitalOut piston (DIGITAL_SENSOR_PORT);
 }
 
 /**
@@ -125,7 +93,9 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-void autonomous() {}
+void autonomous() {
+
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -146,16 +116,13 @@ void opcontrol() {
 	  //get joystick values, and use those values to drive
 		// int left = master.get_analog(ANALOG_LEFT_Y);
 		// int right = -master.get_analog(ANALOG_RIGHT_Y);
-		// left_mtr_1 = left;
-		// left_mtr_2 = left;
-		// right_mtr_1 = right;
-		// right_mtr_2 = right;
+		robo->tankDrive();
 
 		// robo->encoderTest();
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
-		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->readEncoder(2)));
-		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->readEncoder(3)));
-
+		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
+		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
+		// robo->updateEncoderVals();
 		//open/close claw based on left triggers
 		// if (master.get_digital(DIGITAL_L1)) {
     //   claw.move_velocity(100);
@@ -176,10 +143,10 @@ void opcontrol() {
 		// 	piston_2.set_value(false);
     // }
 
-		if (master.get_digital(DIGITAL_B) == 1) {
+		if (robo->getController()->get_digital(DIGITAL_B) == 1) {
 			// robo->positionPID(20);
 		}
-		if (master.get_digital(DIGITAL_X) == 1) {
+		if (robo->getController()->get_digital(DIGITAL_X) == 1) {
 			// robo->turnPID(-90);
 		}
 
