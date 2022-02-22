@@ -9,7 +9,7 @@
 
 #define WHEEL_RADIUS 4
 
-#define ENCODER_COUNT 3
+#define ENCODER_COUNT 2
 #define ENCODER_PPR 100
 
 //RobotDriver
@@ -113,9 +113,10 @@ void opcontrol() {
 	  robo->tankDrive();
 	  // robo->arcadeDrive();
 
-		// pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
-		// pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
-		// pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
+		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
+		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
+		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
+		// robo->updateEncoderVals();
 
 		//front arm
 		if (ctrl->get_digital(DIGITAL_R1)) {
@@ -138,6 +139,12 @@ void opcontrol() {
 		} else {
 			blLever = 0;
 			brLever = 0;
+		}
+		//turning hotkeys (for testing)
+		if (ctrl->get_digital(DIGITAL_LEFT)) {
+			robo->turnPIDAndRecalibrate(-90);
+		} else if (ctrl->get_digital(DIGITAL_RIGHT)) {
+			robo->turnPIDAndRecalibrate(90);
 		}
 		//delay to save resources
 		pros::delay(20);

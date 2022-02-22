@@ -66,7 +66,7 @@ void RobotDriver::configEncoders(int numE, int ppr) {
 // driving functions
 void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
-  const int final_iterations =  8; //how many times to run within the error bound
+  const int final_iterations =  3; //how many times to run within the error bound
   // initialize values to track between loops
   double error = ERROR_BOUND_TURN * 2;
   double error_prior = 0;
@@ -163,16 +163,19 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 	 }
 }
 
+#define ENCODER_PACKET_SIZE 4
 void RobotDriver::updateEncoderVals() {
   //allocate space such that we have two bytes per encoder, as well as an extra two bytes for packet alignment
-  uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * 2);
+  uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * ENCODER_PACKET_SIZE);
   //count the number of packets available
-  int packetsAvail = (arduino.get_read_avail() / (1 + numEncoders * 2));
+  int packetsAvail = (arduino.get_read_avail() / (1 + numEncoders * ENCODER_PACKET_SIZE));
+  pros::lcd::set_text(4, std::to_string(arduino.get_read_avail()));
+  // return;
   if (packetsAvail) {
     //byte alignment; if only one byte is available, the first readings will be misaligned
     int misalignedBytes = 0;
     uint8_t *p = arduinoVals;
-    arduino.read(arduinoVals, (1 + numEncoders * 2));
+    arduino.read(arduinoVals, (1 + numEncoders * ENCODER_PACKET_SIZE));
     packetsAvail --;
     // Example Misalignment:
     // [xx xx xx 0x80 xx xx xx]
@@ -187,23 +190,29 @@ void RobotDriver::updateEncoderVals() {
     }
     //discard extra packets
     while (packetsAvail) {
-      arduino.read(arduinoVals, (1 + numEncoders * 2));
+      arduino.read(arduinoVals, (1 + numEncoders * ENCODER_PACKET_SIZE));
       packetsAvail --;
     }
     //update encoder vals
     for (int i = 0; i < numEncoders; i++) {
-      encoderVals[i] = *(((int16_t *)(arduinoVals + 1)) + i);
+      encoderVals[i] = *(((int32_t *)(arduinoVals + 1)) + i);
     }
+    //testing print statements start
+    // pros::lcd::set_text(0, std::to_string(arduinoVals[0]));
+    // pros::lcd::set_text(1, std::to_string(arduinoVals[1]) + " " + std::to_string(arduinoVals[2]) + " " + std::to_string(arduinoVals[3]) + " " + std::to_string(arduinoVals[4]) + " ");
+    // pros::lcd::set_text(2, std::to_string(arduinoVals[5]) + " " + std::to_string(arduinoVals[6]) + " " + std::to_string(arduinoVals[7]) + " " + std::to_string(arduinoVals[8]) + " ");
+    // pros::lcd::set_text(3, std::to_string(arduinoVals[9]) + " " + std::to_string(arduinoVals[10]) + " " + std::to_string(arduinoVals[11]) + " " + std::to_string(arduinoVals[12]) + " ");
+    //testing print statements end
   }
   free(arduinoVals);
 }
 
-int16_t RobotDriver::getEncoderVal(int index) {
+int32_t RobotDriver::getEncoderVal(int index) {
   if (index > numEncoders || index < 1) return 0;
   return encoderVals[index - 1] * 360 / this->encoderPPR;
 }
 
-int16_t RobotDriver::readEncoder(int index) {
+int32_t RobotDriver::readEncoder(int index) {
   updateEncoderVals();
   return getEncoderVal(index);
 }

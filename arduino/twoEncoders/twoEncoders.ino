@@ -7,10 +7,10 @@
 #define ppr 100
 #define baudrate 115200
 
-int16_t countTick1 = 0;
-int16_t countTick2 = 0;
-int16_t countTick3 = 0;
-int testInt = 0x8888;
+int32_t countTick1 = 0;
+int32_t countTick2 = 0;
+int32_t countTick3 = 0;
+int valuesUpdated = 0;
 
 void setup() {
   pinMode(encoder1A, INPUT);
@@ -29,8 +29,11 @@ void setup() {
 }
 
 void loop() {
-  delay(20);
-  writeToVex();
+  if (valuesUpdated){
+    valuesUpdated = 0;
+    writeToVex();
+  }
+  delay(1);
 }
 
 void computeRotation1() {
@@ -39,6 +42,7 @@ void computeRotation1() {
   } else {
     countTick1 -= 1;
   }
+  valuesUpdated = 1;
 }
 
 void computeRotation2() {
@@ -47,6 +51,7 @@ void computeRotation2() {
   } else {
     countTick2 -= 1;
   }
+  valuesUpdated = 1;
 }
 
 //void computeRotation3() {
@@ -55,12 +60,13 @@ void computeRotation2() {
 //  } else {
 //    countTick3 -= 1;
 //  }
+//  valuesUpdated = 1;
 //}
 
 void writeToVex() {
   byte align = 0x80;
   Serial.write(&align, 1);
-  Serial.write((uint8_t *)&countTick1, 2);
-  Serial.write((uint8_t *)&countTick2, 2);
-  Serial.write((uint8_t *)&countTick3, 2);
+  Serial.write((uint8_t *)&countTick1, 4);
+  Serial.write((uint8_t *)&countTick2, 4);
+//  Serial.write((uint8_t *)&countTick3, 4);
 }

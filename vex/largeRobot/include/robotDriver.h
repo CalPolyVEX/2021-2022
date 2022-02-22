@@ -56,8 +56,8 @@ class RobotDriver {
   //Encoders
   void configEncoders(int numE, int ppr); //tells the driver how many encoders
   void updateEncoderVals(); //updates encoder vals
-  int16_t getEncoderVal(int index); //just reads encoder vals, without checking for new data
-  int16_t readEncoder(int index); //updates encoder vals, and returns the specified val
+  int32_t getEncoderVal(int index); //just reads encoder vals, without checking for new data
+  int32_t readEncoder(int index); //updates encoder vals, and returns the specified val
   //Controller stuff
   void tankDrive();
   void arcadeDrive();
