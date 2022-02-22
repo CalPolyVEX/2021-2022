@@ -16,7 +16,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;
   //calibrate gyro
-  gyro.reset();
+  // gyro.reset();
   //size vectors
   // this->armButtonPorts.resize(1);
 }
@@ -215,6 +215,14 @@ void RobotDriver::tankDrive() {
   this->backLeftMotor = left;
   this->frontRightMotor = right;
   this->backRightMotor = right;
+}
+void RobotDriver::arcadeDrive() {
+  int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+  int horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+  this->frontLeftMotor = horizontal - vertical;
+  this->backLeftMotor = horizontal - vertical;
+  this->frontRightMotor = vertical + horizontal;
+  this->backRightMotor = vertical + horizontal;
 }
 
 // void RobotDriver::armButtons() {

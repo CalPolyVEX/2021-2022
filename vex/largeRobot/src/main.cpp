@@ -14,6 +14,10 @@
 
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
+pros::Motor flLever(15);
+pros::Motor frLever(16);
+pros::Motor blLever(17);
+pros::Motor brLever(18);
 
 /**
  * A callback function for LLEMU's center button.
@@ -104,23 +108,36 @@ void autonomous() {
 
 void opcontrol() {
 	pros::lcd::set_text(0, "Op-Control");
+	pros::Controller *ctrl = robo->getController();
 	while (1) {
 	  robo->tankDrive();
+	  // robo->arcadeDrive();
 
-		robo->armButtons();
+		// pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
+		// pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
+		// pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
 
-		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
-		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
-		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
-
-		if (robo->getController()->get_digital(DIGITAL_B) == 1) {
-			// robo->positionPID(20);
+		//front arm
+		if (ctrl->get_digital(DIGITAL_R1)) {
+			flLever = 96;
+			frLever = -96;
+		} else if (ctrl->get_digital(DIGITAL_R2)) {
+			flLever = -96;
+			frLever = 96;
+		} else {
+			flLever = 0;
+			frLever = 0;
 		}
-		if (robo->getController()->get_digital(DIGITAL_X) == 1) {
-			robo->turnPID(-90);
-		}
-		if (robo->getController()->get_digital(DIGITAL_Y) == 1) {
-			robo->turnPIDAndRecalibrate(90);
+		//back arm
+		if (ctrl->get_digital(DIGITAL_L1)) {
+			blLever = -128;
+			brLever = 128;
+		} else if (ctrl->get_digital(DIGITAL_L2)) {
+			blLever = 128;
+			brLever = -128;
+		} else {
+			blLever = 0;
+			brLever = 0;
 		}
 		//delay to save resources
 		pros::delay(20);

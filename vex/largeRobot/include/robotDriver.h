@@ -60,6 +60,7 @@ class RobotDriver {
   int16_t readEncoder(int index); //updates encoder vals, and returns the specified val
   //Controller stuff
   void tankDrive();
+  void arcadeDrive();
   // void addArmButton(int port1, int port2, int upButton, int downButton);
-  void armButtons();
+  // void armButtons();
 };
