@@ -9,7 +9,6 @@ class RobotDriver {
   pros::Motor frontRightMotor;
   pros::Motor backLeftMotor;
   pros::Motor backRightMotor;
-  pros::Serial arduino;
   pros::Imu gyro;
   pros::Controller controller;
 

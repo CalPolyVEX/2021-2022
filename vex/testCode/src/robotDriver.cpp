@@ -6,7 +6,7 @@
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
- gyro(gyroPort), arduino(20, 115200), controller(pros::E_CONTROLLER_MASTER)
+ gyro(gyroPort), controller(pros::E_CONTROLLER_MASTER)
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
@@ -143,41 +143,6 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 		 // delay by dT
 		 pros::delay(this->positionPIDdT);
 	 }
-}
-
-void RobotDriver::updateEncoderVals() {
-  //allocate space such that we have two bytes per encoder, as well as an extra two bytes for packet alignment
-  uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * 2);
-  //count the number of packets available
-  int packetsAvail = (arduino.get_read_avail() / (1 + numEncoders * 2));
-  if (packetsAvail) {
-    //byte alignment; if only one byte is available, the first readings will be misaligned
-    int misalignedBytes = 0;
-    uint8_t *p = arduinoVals;
-    arduino.read(arduinoVals, (1 + numEncoders * 2));
-    packetsAvail --;
-    // Example Misalignment:
-    // [xx xx xx 0x80 xx xx xx]
-    // 3 byte misalignment
-    while (*p != 0x80) {
-      p ++;
-      misalignedBytes ++;
-    }
-    uint8_t temp;
-    for (int i = 0; i < misalignedBytes; i++) {
-      arduino.read(&temp, 1);
-    }
-    //discard extra packets
-    while (packetsAvail) {
-      arduino.read(arduinoVals, (1 + numEncoders * 2));
-      packetsAvail --;
-    }
-    //update encoder vals
-    for (int i = 0; i < numEncoders; i++) {
-      encoderVals[i] = *(((int16_t *)(arduinoVals + 1)) + i);
-    }
-  }
-  free(arduinoVals);
 }
 
 int16_t RobotDriver::getEncoderVal(int index) {

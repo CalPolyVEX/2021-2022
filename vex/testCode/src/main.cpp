@@ -1,5 +1,6 @@
 #include "main.h"
 #include "robotDriver.h"
+#include "arduinoSensors.hpp"
 
 #define LEFT_WHEELS_1_PORT 1
 #define LEFT_WHEELS_2_PORT 4
@@ -8,8 +9,6 @@
 #define CLAW_PORT 13
 #define GYRO_PORT 15
 #define WHEEL_RADIUS 4
-#define ENCODER_COUNT 3
-#define ENCODER_PPR 100
 
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
@@ -53,9 +52,11 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	arduino_sensors_setup();
+
 	robo->configTurnPID(2.5, 0, 0, 10);
 	robo->configPositionPID(65, 0, 0, 10);
-	robo->configEncoders(ENCODER_COUNT, ENCODER_PPR);
+	robo->configEncoders(ARDUINO_ENCODER_COUNT);
 
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Robot Initialized :)");
