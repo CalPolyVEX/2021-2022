@@ -11,6 +11,14 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
   .withMotors({frontLeftMotorPort, backLeftMotorPort}, {(int8_t)-frontRightMotorPort, (int8_t)-backRightMotorPort})
+#ifndef ARDUINO_MIDDLE_ENCODER
+  .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_RIGHT_ENCODER)))
+#else
+  .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_RIGHT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_MIDDLE_ENCODER)))
+#endif
   .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
   .build();
   //compute wheel circumference
@@ -49,12 +57,7 @@ void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) 
   this->positionPIDkI = kI;
   this->positionPIDkD = kD;
 }
-void RobotDriver::configEncoders(int numE, int ppr) {
-  this->numEncoders = numE;
-  this->encoderVals.resize(numE);
-  this->encoderPPR = ppr;
-  for (int i = 0; i < numE; i++) encoderVals.push_back(0);
-}
+
 // void RobotDriver::addArmButton(int port1, int port2, int upButton, int downButton) {
 //   ArmButtonPorts newArmButton;
 //   newArmButton.port1 = port1;
@@ -160,16 +163,6 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 		 // delay by dT
 		 pros::delay(this->positionPIDdT);
 	 }
-}
-
-int32_t RobotDriver::getEncoderVal(int index) {
-  if (index > numEncoders || index < 1) return 0;
-  return encoderVals[index - 1] * 360 / this->encoderPPR;
-}
-
-int32_t RobotDriver::readEncoder(int index) {
-  updateEncoderVals();
-  return getEncoderVal(index);
 }
 
 void RobotDriver::tankDrive() {

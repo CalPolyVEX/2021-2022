@@ -1,6 +1,7 @@
 #include "api.h"
 #include "okapi/api.hpp"
 #include "okapi/impl/device/motor/motorGroup.hpp"
+#include "arduinoSensors.hpp"
 using namespace okapi;
 
 // typedef struct ArmButtonPorts {
@@ -19,9 +20,7 @@ class RobotDriver {
   pros::Imu gyro;
   pros::Controller controller;
 
-  int numEncoders;
-  std::vector<int> encoderVals;
-  int encoderPPR;
+  std::vector<ArduinoEncoder> encoders;
 
   // std::vector<ArmButtonPorts> armButtonPorts;
 
@@ -52,11 +51,6 @@ class RobotDriver {
   void recalibrateGyro();
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
-  //Encoders
-  void configEncoders(int numE, int ppr); //tells the driver how many encoders
-  void updateEncoderVals(); //updates encoder vals
-  int32_t getEncoderVal(int index); //just reads encoder vals, without checking for new data
-  int32_t readEncoder(int index); //updates encoder vals, and returns the specified val
   //Controller stuff
   void tankDrive();
   void arcadeDrive();

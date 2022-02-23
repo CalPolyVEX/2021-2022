@@ -4,6 +4,12 @@
 #include "okapi/api/device/rotarysensor/continuousRotarySensor.hpp"
 
 #define ARDUINO_ENCODER_COUNT 2
+
+#define ARDUINO_LEFT_ENCODER 0
+#define ARDUINO_RIGHT_ENCODER 1
+// Uncomment this if we have a middle encoder.
+//#define ARDUINO_MIDDLE_ENCODER 2
+
 #define ARDUINO_ENCODER_PPR 100.0
 #define ARDUINO_PORT 20
 #define ARDUINO_BAUD 115200

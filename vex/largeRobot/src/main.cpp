@@ -43,7 +43,6 @@ void initialize() {
 
 	robo->configTurnPID(4, 0, 0, 10, 18, 128);
 	robo->configPositionPID(65, 0, 0, 10);
-	robo->configEncoders(ARDUINO_ENCODER_COUNT);
 
 	pros::lcd::initialize();
 
@@ -108,13 +107,17 @@ void autonomous() {
 void opcontrol() {
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
+
+	ArduinoEncoder enc1 = arduino_encoder_create(0);
+	ArduinoEncoder enc2 = arduino_encoder_create(1);
+
 	while (1) {
 	  robo->tankDrive();
 	  // robo->arcadeDrive();
 
-		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
-		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
-		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
+		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(enc1.get()));
+		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(enc2.get()));
+		// pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
 		// robo->updateEncoderVals();
 
 		//front arm
