@@ -6,28 +6,15 @@
 #define LEFT_WHEELS_2_PORT 4
 #define RIGHT_WHEELS_1_PORT 2
 #define RIGHT_WHEELS_2_PORT 3
-#define CLAW_PORT 13
-#define GYRO_PORT 15
-#define WHEEL_RADIUS 4
+#define GYRO_PORT 10
 
+#define WHEEL_RADIUS 4
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
-
-//controller
-//drive motors
-// pros::Motor left_mtr_1(LEFT_WHEELS_1_PORT);
-// pros::Motor left_mtr_2(LEFT_WHEELS_2_PORT);
-// pros::Motor right_mtr_1(RIGHT_WHEELS_1_PORT);
-// pros::Motor right_mtr_2(RIGHT_WHEELS_2_PORT);
-//claw motor
-// pros::Motor claw (CLAW_PORT, MOTOR_GEARSET_36);
-//pistons
-// pros::ADIDigitalOut piston_1 (PISTON_1_PORT);
-// pros::ADIDigitalOut piston_2 (PISTON_2_PORT);
-//touch touch sensor
-// pros::ADIDigitalIn touch_button (TOUCH_BUTTON_PORT);
-//gyro
-// pros::Imu gyro (GYRO_PORT);
+pros::Motor flLever(15);
+pros::Motor frLever(16);
+pros::Motor blLever(17);
+pros::Motor brLever(18);
 
 /**
  * A callback function for LLEMU's center button.
@@ -54,12 +41,13 @@ void on_center_button() {
 void initialize() {
 	arduino_sensors_setup();
 
-	robo->configTurnPID(2.5, 0, 0, 10);
+	robo->configTurnPID(4, 0, 0, 10, 18, 128);
 	robo->configPositionPID(65, 0, 0, 10);
 	robo->configEncoders(ARDUINO_ENCODER_COUNT);
 
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Robot Initialized :)");
+
+	pros::lcd::set_text(0, "Robot Initialized");
 
 	pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -69,7 +57,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	pros::lcd::set_text(0, "Robot Disabled");
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -80,7 +70,9 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+	pros::lcd::set_text(0, "Competition Initialized");
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -95,7 +87,8 @@ void competition_initialize() {}
  */
 
 void autonomous() {
-
+	pros::lcd::set_text(1, "Autonomous");
+	pros::delay(500);
 }
 
 /**
@@ -113,45 +106,70 @@ void autonomous() {
  */
 
 void opcontrol() {
+	pros::lcd::set_text(0, "Op-Control");
+	pros::Controller *ctrl = robo->getController();
 	while (1) {
-	  //get joystick values, and use those values to drive
-		// int left = master.get_analog(ANALOG_LEFT_Y);
-		// int right = -master.get_analog(ANALOG_RIGHT_Y);
-		robo->tankDrive();
+	  robo->tankDrive();
+	  // robo->arcadeDrive();
 
-		// robo->encoderTest();
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(robo->readEncoder(1)));
 		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(robo->getEncoderVal(2)));
 		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
 		// robo->updateEncoderVals();
-		//open/close claw based on left triggers
-		// if (master.get_digital(DIGITAL_L1)) {
-    //   claw.move_velocity(100);
-    // }
-    // else if (master.get_digital(DIGITAL_L2)) {
-    //   claw.move_velocity(-100);
-    // }
-    // else {
-    //   claw.move_velocity(0);
-    // }
-		//toggle pistons with touch button
-		// if (touch_button.get_value()) {
-		// 	piston_1.set_value(true);
-		// 	piston_2.set_value(true);
-    // }
-    // else {
-		// 	piston_1.set_value(false);
-		// 	piston_2.set_value(false);
-    // }
 
-		if (robo->getController()->get_digital(DIGITAL_B) == 1) {
-			// robo->positionPID(20);
+		//front arm
+		if (ctrl->get_digital(DIGITAL_R1)) {
+			flLever = 96;
+			frLever = -96;
+		} else if (ctrl->get_digital(DIGITAL_R2)) {
+			flLever = -96;
+			frLever = 96;
+		} else {
+			flLever = 0;
+			frLever = 0;
 		}
-		if (robo->getController()->get_digital(DIGITAL_X) == 1) {
-			// robo->turnPID(-90);
+		//back arm
+		if (ctrl->get_digital(DIGITAL_L1)) {
+			blLever = -128;
+			brLever = 128;
+		} else if (ctrl->get_digital(DIGITAL_L2)) {
+			blLever = 128;
+			brLever = -128;
+		} else {
+			blLever = 0;
+			brLever = 0;
 		}
-
+		//turning hotkeys (for testing)
+		if (ctrl->get_digital(DIGITAL_LEFT)) {
+			robo->turnPID(-90);
+		} else if (ctrl->get_digital(DIGITAL_RIGHT)) {
+			robo->turnPID(90);
+		}
 		//delay to save resources
 		pros::delay(20);
 	}
 }
+
+
+//Random commented out code in case we'd like to reference anything:
+
+
+//open/close claw based on left triggers
+// if (master.get_digital(DIGITAL_L1)) {
+//   claw.move_velocity(100);
+// }
+// else if (master.get_digital(DIGITAL_L2)) {
+//   claw.move_velocity(-100);
+// }
+// else {
+//   claw.move_velocity(0);
+// }
+//toggle pistons with touch button
+// if (touch_button.get_value()) {
+// 	piston_1.set_value(true);
+// 	piston_2.set_value(true);
+// }
+// else {
+// 	piston_1.set_value(false);
+// 	piston_2.set_value(false);
+// }

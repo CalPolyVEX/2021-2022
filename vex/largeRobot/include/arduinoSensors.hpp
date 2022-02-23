@@ -3,7 +3,7 @@
 
 #include "okapi/api/device/rotarysensor/continuousRotarySensor.hpp"
 
-#define ARDUINO_ENCODER_COUNT 3
+#define ARDUINO_ENCODER_COUNT 2
 #define ARDUINO_ENCODER_PPR 100.0
 #define ARDUINO_PORT 20
 #define ARDUINO_BAUD 115200
