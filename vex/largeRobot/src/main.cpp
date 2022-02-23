@@ -142,9 +142,9 @@ void opcontrol() {
 		}
 		//turning hotkeys (for testing)
 		if (ctrl->get_digital(DIGITAL_LEFT)) {
-			robo->turnPID(-90, false);
+			robo->turnPID(-90);
 		} else if (ctrl->get_digital(DIGITAL_RIGHT)) {
-			robo->turnPID(90, false);
+			robo->turnPID(90);
 		}
 		//delay to save resources
 		pros::delay(20);

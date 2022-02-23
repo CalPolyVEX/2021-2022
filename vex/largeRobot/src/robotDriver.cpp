@@ -64,7 +64,7 @@ void RobotDriver::configEncoders(int numE, int ppr) {
 //   this->armButtonPorts.push_back(newArmButton);
 // }
 // driving functions
-void RobotDriver::turnPID(double desiredTurnAngle, bool recalibrate) {
+void RobotDriver::turnPID(double desiredTurnAngle) {
   // constants for PID calculations
   const int final_iterations =  3; //how many times to run within the error bound
   // initialize values to track between loops
@@ -95,10 +95,10 @@ void RobotDriver::turnPID(double desiredTurnAngle, bool recalibrate) {
     double derivative = (error - error_prior)/this->turnPIDdT; // change in error over time
     // using PID constants, calculate output
     double output = this->turnPIDkP * error + this->turnPIDkI * integral + this->turnPIDkD * derivative;
-    pros::lcd::set_text(2, "initial: " + std::to_string(initial));
-    pros::lcd::set_text(3, "actual: " + std::to_string(actual));
-    pros::lcd::set_text(4, "desired: " + std::to_string(desiredTurnAngle));
-    pros::lcd::set_text(5, "Error: " + std::to_string(error));
+    // pros::lcd::set_text(2, "initial: " + std::to_string(initial));
+    // pros::lcd::set_text(3, "actual: " + std::to_string(actual));
+    // pros::lcd::set_text(4, "desired: " + std::to_string(desiredTurnAngle));
+    // pros::lcd::set_text(5, "Error: " + std::to_string(error));
     // pros::lcd::set_text(6, "Output: " + std::to_string(output));
     // clamp output to motor-compatible values
     output = clamp(output, this->turnPIDMinSpeed, this->turnPIDMaxSpeed);
@@ -114,15 +114,14 @@ void RobotDriver::turnPID(double desiredTurnAngle, bool recalibrate) {
     // delay by dT
     pros::delay(this->turnPIDdT);
   }
-  if (recalibrate) this->gyro.reset();
 }
-// void RobotDriver::turnPIDAndRecalibrate(double desiredTurnAngle) {
-  // this->turnPID(desiredTurnAngle);
-  // this->recalibrateGyro();
-// }
-// void RobotDriver::recalibrateGyro() {
-  // this->gyro.reset();
-// }
+void RobotDriver::turnPIDAndRecalibrate(double desiredTurnAngle) {
+  this->turnPID(desiredTurnAngle);
+  this->recalibrateGyro();
+}
+void RobotDriver::recalibrateGyro() {
+  this->gyro.reset();
+}
 void RobotDriver::positionPID(double desired_dist_inches) {
 	 // constants for PID calculations
 	 const double maxSpeed = 128;
