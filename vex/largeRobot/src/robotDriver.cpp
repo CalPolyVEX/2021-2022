@@ -6,11 +6,19 @@
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort, int8_t gyroPort, double wheelRad)
  : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
- gyro(gyroPort), arduino(20, 115200), controller(pros::E_CONTROLLER_MASTER)
+ gyro(gyroPort), controller(pros::E_CONTROLLER_MASTER)
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
   .withMotors({frontLeftMotorPort, backLeftMotorPort}, {(int8_t)-frontRightMotorPort, (int8_t)-backRightMotorPort})
+#ifndef ARDUINO_MIDDLE_ENCODER
+  .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_RIGHT_ENCODER)))
+#else
+  .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_RIGHT_ENCODER)),
+    std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_MIDDLE_ENCODER)))
+#endif
   .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
   .build();
   //compute wheel circumference
@@ -49,12 +57,7 @@ void RobotDriver::configPositionPID(double kP, double kI, double kD, double dT) 
   this->positionPIDkI = kI;
   this->positionPIDkD = kD;
 }
-void RobotDriver::configEncoders(int numE, int ppr) {
-  this->numEncoders = numE;
-  this->encoderVals.resize(numE);
-  this->encoderPPR = ppr;
-  for (int i = 0; i < numE; i++) encoderVals.push_back(0);
-}
+
 // void RobotDriver::addArmButton(int port1, int port2, int upButton, int downButton) {
 //   ArmButtonPorts newArmButton;
 //   newArmButton.port1 = port1;
@@ -160,60 +163,6 @@ void RobotDriver::positionPID(double desired_dist_inches) {
 		 // delay by dT
 		 pros::delay(this->positionPIDdT);
 	 }
-}
-
-#define ENCODER_PACKET_SIZE 4
-void RobotDriver::updateEncoderVals() {
-  //allocate space such that we have two bytes per encoder, as well as an extra two bytes for packet alignment
-  uint8_t *arduinoVals = (uint8_t *) malloc(1 + numEncoders * ENCODER_PACKET_SIZE);
-  //count the number of packets available
-  int packetsAvail = (arduino.get_read_avail() / (1 + numEncoders * ENCODER_PACKET_SIZE));
-  pros::lcd::set_text(4, std::to_string(arduino.get_read_avail()));
-  // return;
-  if (packetsAvail) {
-    //byte alignment; if only one byte is available, the first readings will be misaligned
-    int misalignedBytes = 0;
-    uint8_t *p = arduinoVals;
-    arduino.read(arduinoVals, (1 + numEncoders * ENCODER_PACKET_SIZE));
-    packetsAvail --;
-    // Example Misalignment:
-    // [xx xx xx 0x80 xx xx xx]
-    // 3 byte misalignment
-    while (*p != 0x80) {
-      p ++;
-      misalignedBytes ++;
-    }
-    uint8_t temp;
-    for (int i = 0; i < misalignedBytes; i++) {
-      arduino.read(&temp, 1);
-    }
-    //discard extra packets
-    while (packetsAvail) {
-      arduino.read(arduinoVals, (1 + numEncoders * ENCODER_PACKET_SIZE));
-      packetsAvail --;
-    }
-    //update encoder vals
-    for (int i = 0; i < numEncoders; i++) {
-      encoderVals[i] = *(((int32_t *)(arduinoVals + 1)) + i);
-    }
-    //testing print statements start
-    // pros::lcd::set_text(0, std::to_string(arduinoVals[0]));
-    // pros::lcd::set_text(1, std::to_string(arduinoVals[1]) + " " + std::to_string(arduinoVals[2]) + " " + std::to_string(arduinoVals[3]) + " " + std::to_string(arduinoVals[4]) + " ");
-    // pros::lcd::set_text(2, std::to_string(arduinoVals[5]) + " " + std::to_string(arduinoVals[6]) + " " + std::to_string(arduinoVals[7]) + " " + std::to_string(arduinoVals[8]) + " ");
-    // pros::lcd::set_text(3, std::to_string(arduinoVals[9]) + " " + std::to_string(arduinoVals[10]) + " " + std::to_string(arduinoVals[11]) + " " + std::to_string(arduinoVals[12]) + " ");
-    //testing print statements end
-  }
-  free(arduinoVals);
-}
-
-int32_t RobotDriver::getEncoderVal(int index) {
-  if (index > numEncoders || index < 1) return 0;
-  return encoderVals[index - 1] * 360 / this->encoderPPR;
-}
-
-int32_t RobotDriver::readEncoder(int index) {
-  updateEncoderVals();
-  return getEncoderVal(index);
 }
 
 void RobotDriver::tankDrive() {
