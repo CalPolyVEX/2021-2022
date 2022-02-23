@@ -19,7 +19,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
     std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_RIGHT_ENCODER)),
     std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_MIDDLE_ENCODER)))
 #endif
-  .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 14.6_in}, imev5GreenTPR})
+  .withDimensions(AbstractMotor::gearset::green, {{4.1_in, 16.2_in}, imev5GreenTPR})
   .build();
   //compute wheel circumference
   wheelCircumference = wheelRad * M_PI;

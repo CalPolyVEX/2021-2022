@@ -38,6 +38,7 @@ class RobotDriver {
   double positionPIDkD =  0.0000;
   double positionPIDdT = 10.0000;
 
+public:
   std::shared_ptr<okapi::ChassisController> chassis;
 
   public:

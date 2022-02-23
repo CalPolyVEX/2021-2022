@@ -87,7 +87,19 @@ void competition_initialize() {
 
 void autonomous() {
 	pros::lcd::set_text(1, "Autonomous");
-	pros::delay(500);
+
+	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
+    .withLimits({0.2, 0.4, 2.0})
+    .withOutput(robo->chassis)
+    .buildMotionProfileController();
+
+		profileController->generatePath({
+            {10_in, -1.72_in, 32_deg},
+            {0_ft, 0_ft, 0_deg}},
+            "Path1" // Profile name
+        );
+        profileController->setTarget("Path1", true);
+        profileController->waitUntilSettled();
 }
 
 /**
@@ -110,6 +122,8 @@ void opcontrol() {
 
 	ArduinoEncoder enc1 = arduino_encoder_create(0);
 	ArduinoEncoder enc2 = arduino_encoder_create(1);
+
+	// autonomous();
 
 	while (1) {
 	  robo->tankDrive();
