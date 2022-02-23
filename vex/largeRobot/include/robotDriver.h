@@ -48,9 +48,9 @@ class RobotDriver {
   pros::Controller *getController();
   //PID stuff
   void configTurnPID(double kP, double kI, double kD, double dT, int min, int max);
-  void turnPID(double desiredTurnAngle);
-  void turnPIDAndRecalibrate(double desiredTurnAngle);
-  void recalibrateGyro();
+  void turnPID(double desiredTurnAngle, bool recalibrate);
+  // void turnPIDAndRecalibrate(double desiredTurnAngle);
+  // void recalibrateGyro();
   void configPositionPID(double kP, double kI, double kD, double dT);
   void positionPID(double desired_dist_inches);
   //Encoders

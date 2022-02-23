@@ -42,7 +42,7 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	robo->configTurnPID(3, 0.0001, 0, 10, 18, 128);
+	robo->configTurnPID(4, 0, 0, 10, 18, 128);
 	robo->configPositionPID(65, 0, 0, 10);
 	robo->configEncoders(ENCODER_COUNT, ENCODER_PPR);
 
@@ -142,9 +142,9 @@ void opcontrol() {
 		}
 		//turning hotkeys (for testing)
 		if (ctrl->get_digital(DIGITAL_LEFT)) {
-			robo->turnPIDAndRecalibrate(-90);
+			robo->turnPID(-90, false);
 		} else if (ctrl->get_digital(DIGITAL_RIGHT)) {
-			robo->turnPIDAndRecalibrate(90);
+			robo->turnPID(90, false);
 		}
 		//delay to save resources
 		pros::delay(20);
