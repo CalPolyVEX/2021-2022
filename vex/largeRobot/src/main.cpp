@@ -11,10 +11,21 @@
 #define WHEEL_RADIUS 4
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
-pros::Motor flLever(15);
-pros::Motor frLever(16);
-pros::Motor blLever(17);
-pros::Motor brLever(18);
+
+#define FRONT_LEVER_LEFT_PORT 15
+#define FRONT_LEVER_RIGHT_PORT 16
+#define BACK_LEVER_LEFT_PORT 17
+#define BACK_LEVER_RIGHT_PORT 18
+
+pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
+pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
+pros::Motor blLever(BACK_LEVER_LEFT_PORT);
+pros::Motor brLever(BACK_LEVER_RIGHT_PORT);
+
+std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
+	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
+	.withMaxVelocity(50)
+	.build();
 
 /**
  * A callback function for LLEMU's center button.
@@ -86,20 +97,21 @@ void competition_initialize() {
  */
 
 void autonomous() {
-	pros::lcd::set_text(1, "Autonomous");
+	pros::lcd::set_text(0, "Autonomous");
 
 	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
     .withLimits({0.2, 0.4, 2.0})
     .withOutput(robo->chassis)
     .buildMotionProfileController();
 
-		profileController->generatePath({
-            {10_in, -1.72_in, 32_deg},
-            {0_ft, 0_ft, 0_deg}},
-            "Path1" // Profile name
-        );
-        profileController->setTarget("Path1", true);
-        profileController->waitUntilSettled();
+	profileController->generatePath({
+        {10_in, -1.72_in, 32_deg},
+        {0_ft, 0_ft, 0_deg}},
+        "Path1" // Profile name
+  );
+
+	profileController->setTarget("Path1", true);
+  profileController->waitUntilSettled();
 }
 
 /**
@@ -116,14 +128,24 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 
+const int NUM_HEIGHTS = 2;
+const int height1 = 0;
+const int height2 = 500;
+
+const int heights[NUM_HEIGHTS] = {height1, height2}; //, height3, height4};
+
 void opcontrol() {
+  //autonomous();
+	int goalHeight = 0;
+
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
 
 	ArduinoEncoder enc1 = arduino_encoder_create(0);
 	ArduinoEncoder enc2 = arduino_encoder_create(1);
 
-	// autonomous();
+	ControllerButton btnUp(ControllerDigital::B);
+	ControllerButton btnDown(ControllerDigital::A);
 
 	while (1) {
 	  robo->tankDrive();
@@ -135,16 +157,35 @@ void opcontrol() {
 		// robo->updateEncoderVals();
 
 		//front arm
-		if (ctrl->get_digital(DIGITAL_R1)) {
+		if (btnUp.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
+      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
+      goalHeight++;
+      frontArm->setTarget(heights[goalHeight]);
+    } else if (btnDown.changedToPressed() && goalHeight > 0) {
+      goalHeight--;
+      frontArm->setTarget(heights[goalHeight]);
+    }
+
+		/*if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
+			frontArm->flipDisable(true);
+			flLever = 56;
+			frLever = -56;
+		} else if (ctrl->get_digital(DIGITAL_R1)) {
+			frontArm->flipDisable(true);
 			flLever = 96;
 			frLever = -96;
 		} else if (ctrl->get_digital(DIGITAL_R2)) {
+			frontArm->flipDisable(true);
 			flLever = -96;
 			frLever = 96;
+		} else if (ctrl->get_digital(DIGITAL_A)) {
+			frontArm->setTarget(10);
 		} else {
-			flLever = 0;
-			frLever = 0;
-		}
+			if (frontArm->isDisabled()) {
+				flLever = 0;
+				frLever = 0;
+			}
+		}*/
 		//back arm
 		if (ctrl->get_digital(DIGITAL_L1)) {
 			blLever = -128;
