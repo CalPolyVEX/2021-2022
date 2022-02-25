@@ -8,6 +8,9 @@ pros::Serial arduino(ARDUINO_PORT, ARDUINO_BAUD);
 
 // change the length of this initializer if you change the encoder count.
 std::atomic<int32_t> arduino_encoders[ARDUINO_ENCODER_COUNT] = {
+#ifdef HAS_MIDDLE_ENCODER
+  0,
+#endif
   0,
   0
 };

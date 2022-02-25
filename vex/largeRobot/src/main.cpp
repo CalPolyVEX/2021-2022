@@ -1,16 +1,15 @@
 #include "main.h"
 #include "robotDriver.h"
 #include "arduinoSensors.hpp"
+#include "robot_specifics.h"
 
 #define LEFT_WHEELS_1_PORT 1
 #define LEFT_WHEELS_2_PORT 4
 #define RIGHT_WHEELS_1_PORT 2
 #define RIGHT_WHEELS_2_PORT 3
-#define GYRO_PORT 10
 
-#define WHEEL_RADIUS 4
 //RobotDriver
-RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT, GYRO_PORT, WHEEL_RADIUS);
+RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
 
 #define FRONT_LEVER_LEFT_PORT 15
 #define FRONT_LEVER_RIGHT_PORT 16
@@ -51,9 +50,6 @@ void on_center_button() {
  */
 void initialize() {
 	arduino_sensors_setup();
-
-	robo->configTurnPID(4, 0, 0, 10, 18, 128);
-	robo->configPositionPID(65, 0, 0, 10);
 
 	pros::lcd::initialize();
 
@@ -99,6 +95,15 @@ void competition_initialize() {
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
 
+	// Generate an "S-curve" that takes us through the given waypoints.
+	// S-curves let us move as accurate as we can, instead of repeatedly doing
+	// "turn" and then "move straight".
+	//
+	// You can still do them as normal, but you have to make sure that the
+	// profile controller is settled first.
+
+	// Note: This curve is just for testing. Feel free to modify any of this when
+	// actually programming the auton routines.
 	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
     .withLimits({0.2, 0.4, 2.0})
     .withOutput(robo->chassis)
@@ -144,17 +149,27 @@ void opcontrol() {
 	ArduinoEncoder enc1 = arduino_encoder_create(0);
 	ArduinoEncoder enc2 = arduino_encoder_create(1);
 
+#ifdef HAS_MIDDLE_ENCODER
+	ArduinoEncoder enc3 = arduino_encoder_create(2);
+#endif
+
 	ControllerButton btnUp(ControllerDigital::B);
 	ControllerButton btnDown(ControllerDigital::A);
 
 	while (1) {
+
+#if DRIVE_MODE == TANK
 	  robo->tankDrive();
-	  // robo->arcadeDrive();
+#else
+	  robo->arcadeDrive();
+#endif
 
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(enc1.get()));
 		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(enc2.get()));
-		// pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(robo->getEncoderVal(3)));
-		// robo->updateEncoderVals();
+
+#ifdef HAS_MIDDLE_ENCODER
+		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(enc3.get()));
+#endif
 
 		//front arm
 		if (btnUp.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
@@ -197,13 +212,8 @@ void opcontrol() {
 			blLever = 0;
 			brLever = 0;
 		}
-		//turning hotkeys (for testing)
-		if (ctrl->get_digital(DIGITAL_LEFT)) {
-			robo->turnPID(-90);
-		} else if (ctrl->get_digital(DIGITAL_RIGHT)) {
-			robo->turnPID(90);
-		}
-		//delay to save resources
+
+		// delay to save resources
 		pros::delay(20);
 	}
 }
