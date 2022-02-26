@@ -222,6 +222,9 @@ void opcontrol() {
 		else if(ctrl->get_digital(DIGITAL_Y)){
 			claw = 100;
 		}
+		else{
+			claw = 0;
+		}
 
 		// delay to save resources
 		pros::delay(20);
