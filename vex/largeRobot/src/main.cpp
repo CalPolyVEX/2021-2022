@@ -135,11 +135,13 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 
-const int NUM_HEIGHTS = 2;
-const int height1 = 0;
-const int height2 = 500;
-
-const int heights[NUM_HEIGHTS] = {height1, height2}; //, height3, height4};
+const int NUM_HEIGHTS = 4;
+const int heights[NUM_HEIGHTS] = {
+	0,
+	-500,
+	-1000,
+	-1500
+};
 
 void opcontrol() {
   //autonomous();
