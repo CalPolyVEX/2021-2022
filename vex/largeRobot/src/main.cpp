@@ -133,9 +133,6 @@ void competition_initialize() {
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
 
-	// TODO: Remove once autonomous isn't scuffed.
-	//return;
-
 	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
     .withLimits({100.0, 100.0, 100.0})
     .withOutput(robo->chassis)
