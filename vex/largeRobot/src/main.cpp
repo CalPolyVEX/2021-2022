@@ -37,7 +37,8 @@ std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
 
 int ALLOW_TEST_AUTON = 1;
 
-//
+int backHeightOffset = 0;
+int frontHeightOffset = 0;
 
 const int NUM_FRONT_HEIGHTS = 4;
 const int frontHeights[NUM_FRONT_HEIGHTS] = {
@@ -132,6 +133,9 @@ void competition_initialize() {
 
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
+
+	// Make sure the claw starts released.
+	clawCtl->setTarget(CLAW_RELEASED_TARGET);
 
 	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
     .withLimits({100.0, 100.0, 100.0})
@@ -237,6 +241,11 @@ void opcontrol() {
 	ControllerButton btnClawHold(ControllerDigital::X);
 	ControllerButton btnClawRelease(ControllerDigital::Y);
 
+	ControllerButton btnBackOverrideUp(ControllerDigital::up);
+	ControllerButton btnBackOverrideDown(ControllerDigital::down);
+	ControllerButton btnFrontOverrideUp(ControllerDigital::right);
+	ControllerButton btnFrontOverrideDown(ControllerDigital::left);
+
 	while (1) {
 
 #if DRIVE_MODE == TANK
@@ -262,22 +271,39 @@ void opcontrol() {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
       frontGoalHeight++;
 			frontArm->setMaxVelocity(5000);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
+      frontArm->setTarget(frontHeights[frontGoalHeight] + frontHeightOffset);
     } else if (btnFrontUp.changedToPressed() && frontGoalHeight > 0) {
       frontGoalHeight--;
 			frontArm->setMaxVelocity(50);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
+      frontArm->setTarget(frontHeights[frontGoalHeight] + frontHeightOffset);
     }
 
 		// back
 		if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
       backGoalHeight++;
-      backArm->setTarget(backHeights[backGoalHeight]);
+      backArm->setTarget(backHeights[backGoalHeight] + backHeightOffset);
     } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
       backGoalHeight--;
-      backArm->setTarget(backHeights[backGoalHeight]);
+      backArm->setTarget(backHeights[backGoalHeight] + backHeightOffset);
     }
+
+		// Allow the driver to override
+		if (btnFrontOverrideUp.changedToPressed()) {
+			frontHeightOffset -= 50;
+			frontArm->setTarget(frontHeights[frontGoalHeight] + frontHeightOffset);
+		} else if (btnFrontOverrideDown.changedToPressed()) {
+			frontHeightOffset += 50;
+			frontArm->setTarget(frontHeights[frontGoalHeight] + frontHeightOffset);
+		}
+
+		if (btnBackOverrideUp.changedToPressed()) {
+			backHeightOffset += 50;
+			backArm->setTarget(backHeights[backGoalHeight] + backHeightOffset);
+		} else if (btnBackOverrideDown.changedToPressed()) {
+			backHeightOffset -= 50;
+			backArm->setTarget(backHeights[backGoalHeight] + backHeightOffset);
+		}
 
 		if (btnClawHold.changedToPressed() && !clawHold) {
 			clawHold = 1;
