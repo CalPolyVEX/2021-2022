@@ -166,11 +166,16 @@ void opcontrol() {
 	  robo->arcadeDrive();
 #endif
 
+#ifdef USE_INTEGRATED_ENCODERS
+		pros::lcd::set_text(1, "Using Integrated Encoders");
+		pros::lcd::set_text(2, "Arduino encoders disabled in-code");
+#else
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(enc1.get()));
 		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(enc2.get()));
 
 #ifdef HAS_MIDDLE_ENCODER
 		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(enc3.get()));
+#endif
 #endif
 
 		//front arm
