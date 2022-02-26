@@ -145,10 +145,10 @@ void autonomous() {
 	// You can still do them as normal, but you have to make sure that the
 	// profile controller is settled first.
 
-	// Note: This curve is just for testing. Feel free to modify any of this when
-	// actually programming the auton routines.
-
-	// TODO: Write this path based on what we actually need
+	// This might overshoot the target a bit but that's OK.
+	// We'd rather overshoot than undershoot. If we undershoot
+	// then we don't get anything. If we overshoot then we'll
+	// push the goal a bit but we can still get it.
 	profileController->generatePath({
         {0_in, 0_ft, 0_deg},
         {54_in, 0_ft, 0_deg}},
@@ -165,7 +165,7 @@ void autonomous() {
   profileController->waitUntilSettled();
 	backArm->waitUntilSettled();
 
-	// Back arm is now lowered, hold the claw.
+	// Back arm is now lowered, hold the goal in the claw.
 	clawCtl->setTarget(CLAW_HOLD_TARGET);
 
 	// This seems to not deadlock, even though it clamps down hard on the goal.
