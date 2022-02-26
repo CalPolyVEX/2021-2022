@@ -25,13 +25,42 @@ pros::Motor claw(CLAW_PORT);
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
 	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
-	.withMaxVelocity(50)
+	.build();
+
+std::shared_ptr<okapi::AsyncPositionController<double, double>> backArm =
+	okapi::AsyncPosControllerBuilder().withMotor({BACK_LEVER_LEFT_PORT, -BACK_LEVER_RIGHT_PORT})
 	.build();
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
 		okapi::AsyncPosControllerBuilder().withMotor(CLAW_PORT)
-		.withMaxVelocity(50)
 		.build();
+
+int ALLOW_TEST_AUTON = 1;
+
+//
+
+const int NUM_FRONT_HEIGHTS = 4;
+const int frontHeights[NUM_FRONT_HEIGHTS] = {
+	0,
+	-500,
+	-1000,
+	-1450
+};
+
+const int NUM_BACK_HEIGHTS = 4;
+const int backHeights[NUM_BACK_HEIGHTS] = {
+	0,
+	1000,
+	2000,
+	3000
+};
+
+int frontGoalHeight = 0;
+int backGoalHeight = 0;
+int clawHold = 0;
+
+#define CLAW_HOLD_TARGET (-260)
+#define CLAW_RELEASED_TARGET 0
 
 /**
  * A callback function for LLEMU's center button.
@@ -85,6 +114,8 @@ void disabled() {
  */
 void competition_initialize() {
 	pros::lcd::set_text(0, "Competition Initialized");
+
+	ALLOW_TEST_AUTON = 0;
 }
 
 /**
@@ -102,6 +133,14 @@ void competition_initialize() {
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
 
+	// TODO: Remove once autonomous isn't scuffed.
+	//return;
+
+	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
+    .withLimits({100.0, 100.0, 100.0})
+    .withOutput(robo->chassis)
+    .buildMotionProfileController();
+
 	// Generate an "S-curve" that takes us through the given waypoints.
 	// S-curves let us move as accurate as we can, instead of repeatedly doing
 	// "turn" and then "move straight".
@@ -111,19 +150,50 @@ void autonomous() {
 
 	// Note: This curve is just for testing. Feel free to modify any of this when
 	// actually programming the auton routines.
-	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
-    .withLimits({0.2, 0.4, 2.0})
-    .withOutput(robo->chassis)
-    .buildMotionProfileController();
 
+	// TODO: Write this path based on what we actually need
 	profileController->generatePath({
-        {10_in, -1.72_in, 32_deg},
-        {0_ft, 0_ft, 0_deg}},
-        "Path1" // Profile name
+        {0_in, 0_ft, 0_deg},
+        {54_in, 0_ft, 0_deg}},
+        "MoveToMiddleGoal" // Profile name
   );
 
-	profileController->setTarget("Path1", true);
+	profileController->setTarget("MoveToMiddleGoal", true);
+
+	// Claw in released position
+	// Lower back arm to ground position.
+	backGoalHeight = 3;
+	backArm->setTarget(backHeights[backGoalHeight]);
+
   profileController->waitUntilSettled();
+	backArm->waitUntilSettled();
+
+	// Back arm is now lowered, hold the claw.
+	clawCtl->setTarget(CLAW_HOLD_TARGET);
+
+	// This seems to not deadlock, even though it clamps down hard on the goal.
+	clawCtl->waitUntilSettled();
+
+	// Raise back arm to raised position.
+	backGoalHeight = 1;
+	backArm->setTarget(backHeights[backGoalHeight]);
+	// NB: Don't wait before moving.
+
+	// Start moving without waiting.
+	// TODO: Write this path based on what we actually need
+	/*profileController->generatePath({
+        {-58_in, 0_in, 0_deg},
+        {0_ft, 0_ft, 0_deg}},
+        "ReturnFromMiddleGoal" // Profile name
+  );
+
+	profileController->setTarget("ReturnFromMiddleGoal", true);
+  profileController->waitUntilSettled();*/
+
+
+	// Lower front arm to ground position.
+	//frontGoalHeight = 3;
+	//frontArm->setTarget(frontHeights[frontGoalHeight]);
 }
 
 /**
@@ -140,19 +210,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 
-const int NUM_HEIGHTS = 4;
-const int heights[NUM_HEIGHTS] = {
-	0,
-	-500,
-	-1000,
-	-1450
-};
-
 void opcontrol() {
-  //autonomous();
-	int goalHeight = 0;
-	int clawHold = 0;
-
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
 
@@ -163,8 +221,12 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
-	ControllerButton btnUp(ControllerDigital::R1);
-	ControllerButton btnDown(ControllerDigital::R2);
+	ControllerButton btnTestAuton(ControllerDigital::A);
+
+	ControllerButton btnFrontUp(ControllerDigital::R1);
+	ControllerButton btnFrontDown(ControllerDigital::R2);
+	ControllerButton btnBackUp(ControllerDigital::L1);
+	ControllerButton btnBackDown(ControllerDigital::L2);
 	ControllerButton btnClawHold(ControllerDigital::X);
 	ControllerButton btnClawRelease(ControllerDigital::Y);
 
@@ -189,45 +251,41 @@ void opcontrol() {
 #endif
 
 		//front arm
-		if (btnDown.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
+		if (btnFrontDown.changedToPressed() && frontGoalHeight < NUM_FRONT_HEIGHTS - 1) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-      goalHeight++;
-      frontArm->setTarget(heights[goalHeight]);
-    } else if (btnUp.changedToPressed() && goalHeight > 0) {
-      goalHeight--;
-      frontArm->setTarget(heights[goalHeight]);
+      frontGoalHeight++;
+			frontArm->setMaxVelocity(5000);
+      frontArm->setTarget(frontHeights[frontGoalHeight]);
+    } else if (btnFrontUp.changedToPressed() && frontGoalHeight > 0) {
+      frontGoalHeight--;
+			frontArm->setMaxVelocity(50);
+      frontArm->setTarget(frontHeights[frontGoalHeight]);
+    }
+
+		// back
+		if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
+      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
+      backGoalHeight++;
+      backArm->setTarget(backHeights[backGoalHeight]);
+    } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
+      backGoalHeight--;
+      backArm->setTarget(backHeights[backGoalHeight]);
     }
 
 		if (btnClawHold.changedToPressed() && !clawHold) {
 			clawHold = 1;
-			clawCtl->setTarget(-260);
+			clawCtl->setTarget(CLAW_HOLD_TARGET);
 		} else if (btnClawRelease.changedToPressed() && clawHold) {
 			clawHold = 0;
-			clawCtl->setTarget(0);
+			clawCtl->setTarget(CLAW_RELEASED_TARGET);
 		}
 
-		/*if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
-			frontArm->flipDisable(true);
-			flLever = 56;
-			frLever = -56;
-		} else if (ctrl->get_digital(DIGITAL_R1)) {
-			frontArm->flipDisable(true);
-			flLever = 127;
-			frLever = -127;
-		} else if (ctrl->get_digital(DIGITAL_R2)) {
-			frontArm->flipDisable(true);
-			flLever = -127;
-			frLever = 127;
-		} else if (ctrl->get_digital(DIGITAL_A)) {
-			frontArm->setTarget(1000);
-		} else {
-			if (frontArm->isDisabled()) {
-				flLever = 0;
-				frLever = 0;
-			}
-		}*/
+		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
+			autonomous();
+		}
+
 		//back arm
-		if (ctrl->get_digital(DIGITAL_L1)) {
+		/*if (ctrl->get_digital(DIGITAL_L1)) {
 			blLever = -96;
 			brLever = 96;
 		} else if (ctrl->get_digital(DIGITAL_L2)) {
@@ -236,7 +294,7 @@ void opcontrol() {
 		} else {
 			blLever = 0;
 			brLever = 0;
-		}
+		}*/
 
 		//claw
 		/*if (ctrl->get_digital(DIGITAL_X)){
