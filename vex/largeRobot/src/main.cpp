@@ -137,7 +137,7 @@ void autonomous() {
 
 const int NUM_HEIGHTS = 2;
 const int height1 = 0;
-const int height2 = 1000;
+const int height2 = 500;
 
 const int heights[NUM_HEIGHTS] = {height1, height2}; //, height3, height4};
 
@@ -183,7 +183,7 @@ void opcontrol() {
       frontArm->setTarget(heights[goalHeight]);
     }
 
-		if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
+		/*if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
 			frontArm->flipDisable(true);
 			flLever = 56;
 			frLever = -56;
@@ -202,7 +202,7 @@ void opcontrol() {
 				flLever = 0;
 				frLever = 0;
 			}
-		}
+		}*/
 		//back arm
 		if (ctrl->get_digital(DIGITAL_L1)) {
 			blLever = -96;
