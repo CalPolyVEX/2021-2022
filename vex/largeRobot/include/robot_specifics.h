@@ -15,6 +15,9 @@
   // See this for what "wheel track" means:
   // https://okapilib.github.io/OkapiLib/classokapi_1_1ChassisScales.html#a7e35f22518d4f74105ffa741b40dcb17
   #define WHEEL_TRACK 16.2_in
+
+  // our electrical setup is messed up so just use the integrated encoders :(
+  #define USE_INTEGRATED_ENCODERS
 #endif
 
 #ifdef SMALL_ROBOT_ATREIDES
