@@ -13,13 +13,15 @@ RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEF
 
 #define FRONT_LEVER_LEFT_PORT 15
 #define FRONT_LEVER_RIGHT_PORT 16
-#define BACK_LEVER_LEFT_PORT 17
-#define BACK_LEVER_RIGHT_PORT 18
+#define BACK_LEVER_LEFT_PORT 12
+#define BACK_LEVER_RIGHT_PORT 13
+#define CLAW_PORT 19
 
 pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
 pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
 pros::Motor blLever(BACK_LEVER_LEFT_PORT);
 pros::Motor brLever(BACK_LEVER_RIGHT_PORT);
+pros::Motor claw(CLAW_PORT);
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
 	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
@@ -135,7 +137,7 @@ void autonomous() {
 
 const int NUM_HEIGHTS = 2;
 const int height1 = 0;
-const int height2 = 500;
+const int height2 = 1000;
 
 const int heights[NUM_HEIGHTS] = {height1, height2}; //, height3, height4};
 
@@ -181,36 +183,44 @@ void opcontrol() {
       frontArm->setTarget(heights[goalHeight]);
     }
 
-		/*if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
+		if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
 			frontArm->flipDisable(true);
 			flLever = 56;
 			frLever = -56;
 		} else if (ctrl->get_digital(DIGITAL_R1)) {
 			frontArm->flipDisable(true);
-			flLever = 96;
-			frLever = -96;
+			flLever = 127;
+			frLever = -127;
 		} else if (ctrl->get_digital(DIGITAL_R2)) {
 			frontArm->flipDisable(true);
-			flLever = -96;
-			frLever = 96;
+			flLever = -127;
+			frLever = 127;
 		} else if (ctrl->get_digital(DIGITAL_A)) {
-			frontArm->setTarget(10);
+			frontArm->setTarget(1000);
 		} else {
 			if (frontArm->isDisabled()) {
 				flLever = 0;
 				frLever = 0;
 			}
-		}*/
+		}
 		//back arm
 		if (ctrl->get_digital(DIGITAL_L1)) {
-			blLever = -128;
-			brLever = 128;
+			blLever = -96;
+			brLever = 96;
 		} else if (ctrl->get_digital(DIGITAL_L2)) {
-			blLever = 128;
-			brLever = -128;
+			blLever = 96;
+			brLever = -96;
 		} else {
 			blLever = 0;
 			brLever = 0;
+		}
+
+		//claw
+		if (ctrl->get_digital(DIGITAL_X)){
+			claw = -100;
+		}
+		else if(ctrl->get_digital(DIGITAL_Y)){
+			claw = 100;
 		}
 
 		// delay to save resources
