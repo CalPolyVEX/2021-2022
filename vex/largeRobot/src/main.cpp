@@ -151,7 +151,7 @@ void autonomous() {
 	// push the goal a bit but we can still get it.
 	profileController->generatePath({
         {0_in, 0_ft, 0_deg},
-        {54_in, 0_ft, 0_deg}},
+        {-54_in, 0_ft, 0_deg}},
         "MoveToMiddleGoal" // Profile name
   );
 
@@ -172,20 +172,22 @@ void autonomous() {
 	clawCtl->waitUntilSettled();
 
 	// Raise back arm to raised position.
-	backGoalHeight = 1;
+	backGoalHeight = 0;
 	backArm->setTarget(backHeights[backGoalHeight]);
 	// NB: Don't wait before moving.
 
 	// Start moving without waiting.
-	// TODO: Write this path based on what we actually need
-	/*profileController->generatePath({
-        {-58_in, 0_in, 0_deg},
-        {0_ft, 0_ft, 0_deg}},
+	profileController->generatePath({
+        {0_in, 0_in, 0_deg},
+        {-60_in, 0_ft, 0_deg}},
         "ReturnFromMiddleGoal" // Profile name
   );
 
-	profileController->setTarget("ReturnFromMiddleGoal", true);
-  profileController->waitUntilSettled();*/
+	// flip this boolean to move backwards instead of forwards
+	// apparently the underlying pathfinder library can't generate
+	// negative velocities / backwards paths, so this is the workaround.
+	profileController->setTarget("ReturnFromMiddleGoal", false);
+  profileController->waitUntilSettled();
 
 
 	// Lower front arm to ground position.
@@ -208,6 +210,14 @@ void autonomous() {
  */
 
 void opcontrol() {
+	// Ensure that we keep the same state we had in auton
+	// For some reason motors the motors disengaged when switching to auton.
+	// No idea why, but I don't have time to find out why right now
+	clawHold = 1;
+	backGoalHeight = 0;
+	clawCtl->setTarget(CLAW_HOLD_TARGET);
+	backArm->setTarget(backHeights[backGoalHeight]);
+
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
 
