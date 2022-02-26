@@ -28,6 +28,11 @@ std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
 	.withMaxVelocity(50)
 	.build();
 
+std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
+		okapi::AsyncPosControllerBuilder().withMotor(CLAW_PORT)
+		.withMaxVelocity(50)
+		.build();
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -140,12 +145,13 @@ const int heights[NUM_HEIGHTS] = {
 	0,
 	-500,
 	-1000,
-	-1500
+	-1450
 };
 
 void opcontrol() {
   //autonomous();
 	int goalHeight = 0;
+	int clawHold = 0;
 
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
@@ -157,8 +163,10 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
-	ControllerButton btnUp(ControllerDigital::B);
-	ControllerButton btnDown(ControllerDigital::A);
+	ControllerButton btnUp(ControllerDigital::R1);
+	ControllerButton btnDown(ControllerDigital::R2);
+	ControllerButton btnClawHold(ControllerDigital::X);
+	ControllerButton btnClawRelease(ControllerDigital::Y);
 
 	while (1) {
 
@@ -181,14 +189,22 @@ void opcontrol() {
 #endif
 
 		//front arm
-		if (btnUp.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
+		if (btnDown.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
       goalHeight++;
       frontArm->setTarget(heights[goalHeight]);
-    } else if (btnDown.changedToPressed() && goalHeight > 0) {
+    } else if (btnUp.changedToPressed() && goalHeight > 0) {
       goalHeight--;
       frontArm->setTarget(heights[goalHeight]);
     }
+
+		if (btnClawHold.changedToPressed() && !clawHold) {
+			clawHold = 1;
+			clawCtl->setTarget(-260);
+		} else if (btnClawRelease.changedToPressed() && clawHold) {
+			clawHold = 0;
+			clawCtl->setTarget(0);
+		}
 
 		/*if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
 			frontArm->flipDisable(true);
@@ -223,12 +239,12 @@ void opcontrol() {
 		}
 
 		//claw
-		if (ctrl->get_digital(DIGITAL_X)){
+		/*if (ctrl->get_digital(DIGITAL_X)){
 			claw = -100;
 		}
 		else if(ctrl->get_digital(DIGITAL_Y)){
 			claw = 100;
-		}
+		}*/
 
 		// delay to save resources
 		pros::delay(20);
