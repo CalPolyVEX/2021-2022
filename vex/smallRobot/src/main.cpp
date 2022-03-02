@@ -3,32 +3,33 @@
 #include "arduinoSensors.hpp"
 #include "robot_specifics.h"
 
-#define LEFT_WHEELS_1_PORT 1
-#define LEFT_WHEELS_2_PORT 4
-#define RIGHT_WHEELS_1_PORT 2
-#define RIGHT_WHEELS_2_PORT 3
+#define LEFT_WHEELS_1_PORT 2
+#define LEFT_WHEELS_2_PORT 3
+#define RIGHT_WHEELS_1_PORT 17
+#define RIGHT_WHEELS_2_PORT 18
+#define PISTON_PORT 'A'
 
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
 
-#define FRONT_LEVER_LEFT_PORT 15
-#define FRONT_LEVER_RIGHT_PORT 16
-#define BACK_LEVER_LEFT_PORT 12
-#define BACK_LEVER_RIGHT_PORT 13
-#define CLAW_PORT 19
+#define INTAKE_PORT 4
+#define ARM_LEFT 5
+#define ARM_RIGHT 6 //move together
+#define CLAW_PORT 16
 
-pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
-pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
-pros::Motor blLever(BACK_LEVER_LEFT_PORT);
-pros::Motor brLever(BACK_LEVER_RIGHT_PORT);
+// pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
+// pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
+// pros::Motor blLever(BACK_LEVER_LEFT_PORT);
+// pros::Motor brLever(BACK_LEVER_RIGHT_PORT);
 pros::Motor claw(CLAW_PORT);
+pros::ADIDigitalOut piston (PISTON_PORT);
 
-std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
-	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
-	.build();
-
-std::shared_ptr<okapi::AsyncPositionController<double, double>> backArm =
-	okapi::AsyncPosControllerBuilder().withMotor({BACK_LEVER_LEFT_PORT, -BACK_LEVER_RIGHT_PORT})
+// std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
+// 	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
+// 	.build();
+//
+std::shared_ptr<okapi::AsyncPositionController<double, double>> Arm =
+	okapi::AsyncPosControllerBuilder().withMotor({ARM_LEFT, -ARM_RIGHT})
 	.build();
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
@@ -39,25 +40,24 @@ int ALLOW_TEST_AUTON = 1;
 
 //
 
-const int NUM_FRONT_HEIGHTS = 4;
-const int frontHeights[NUM_FRONT_HEIGHTS] = {
+const int NUM_CLAWPOS_HEIGHTS = 3;
+const int frontHeights[NUM_CLAWPOS_HEIGHTS] = {
 	0,
-	-500,
-	-1000,
-	-1450
+	-2000,
+	-200
 };
 
-const int NUM_BACK_HEIGHTS = 4;
-const int backHeights[NUM_BACK_HEIGHTS] = {
+const int NUM_ARM_HEIGHTS = 4;
+const int backHeights[NUM_ARM_HEIGHTS] = {
 	0,
-	1000,
-	2000,
-	3000
+	-2000,
+	-4000,
+	-6000
 };
 
 int frontGoalHeight = 0;
 int backGoalHeight = 0;
-int clawHold = 0;
+bool clawHold = false;
 
 #define CLAW_HOLD_TARGET (-260)
 #define CLAW_RELEASED_TARGET 0
@@ -157,24 +157,24 @@ void autonomous() {
 
 	profileController->setTarget("MoveToMiddleGoal", true);
 
-	// Claw in released position
-	// Lower back arm to ground position.
-	backGoalHeight = 3;
-	backArm->setTarget(backHeights[backGoalHeight]);
-
-  profileController->waitUntilSettled();
-	backArm->waitUntilSettled();
-
-	// Back arm is now lowered, hold the goal in the claw.
-	clawCtl->setTarget(CLAW_HOLD_TARGET);
-
-	// This seems to not deadlock, even though it clamps down hard on the goal.
-	clawCtl->waitUntilSettled();
-
-	// Raise back arm to raised position.
-	backGoalHeight = 0;
-	backArm->setTarget(backHeights[backGoalHeight]);
-	// NB: Don't wait before moving.
+	// // Claw in released position
+	// // Lower back arm to ground position.
+	// backGoalHeight = 3;
+	// backArm->setTarget(backHeights[backGoalHeight]);
+	//
+  // profileController->waitUntilSettled();
+	// backArm->waitUntilSettled();
+	//
+	// // Back arm is now lowered, hold the goal in the claw.
+	// clawCtl->setTarget(CLAW_HOLD_TARGET);
+	//
+	// // This seems to not deadlock, even though it clamps down hard on the goal.
+	// clawCtl->waitUntilSettled();
+	//
+	// // Raise back arm to raised position.
+	// backGoalHeight = 0;
+	// backArm->setTarget(backHeights[backGoalHeight]);
+	// // NB: Don't wait before moving.
 
 	// Start moving without waiting.
 	profileController->generatePath({
@@ -213,10 +213,10 @@ void opcontrol() {
 	// Ensure that we keep the same state we had in auton
 	// For some reason motors the motors disengaged when switching to auton.
 	// No idea why, but I don't have time to find out why right now
-	clawHold = 1;
-	backGoalHeight = 0;
-	clawCtl->setTarget(CLAW_HOLD_TARGET);
-	backArm->setTarget(backHeights[backGoalHeight]);
+	// clawHold = 1;
+	// backGoalHeight = 0;
+	// clawCtl->setTarget(CLAW_HOLD_TARGET);
+	// backArm->setTarget(backHeights[backGoalHeight]);
 
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
@@ -228,14 +228,13 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
-	ControllerButton btnTestAuton(ControllerDigital::A);
-
-	ControllerButton btnFrontUp(ControllerDigital::R1);
-	ControllerButton btnFrontDown(ControllerDigital::R2);
-	ControllerButton btnBackUp(ControllerDigital::L1);
-	ControllerButton btnBackDown(ControllerDigital::L2);
-	ControllerButton btnClawHold(ControllerDigital::X);
-	ControllerButton btnClawRelease(ControllerDigital::Y);
+	ControllerButton btnTestAuton(ControllerDigital::X);
+	ControllerButton btnResetPos(ControllerDigital::B);
+	ControllerButton btnClawPos1(ControllerDigital::A);
+	ControllerButton btnArmDown(ControllerDigital::L1);
+	ControllerButton btnArmUp(ControllerDigital::L2);
+	ControllerButton btnClaw(ControllerDigital::X);
+	//ControllerButton btnClawRelease(ControllerDigital::Y);
 
 	while (1) {
 
@@ -258,60 +257,36 @@ void opcontrol() {
 #endif
 
 		//front arm
-		if (btnFrontDown.changedToPressed() && frontGoalHeight < NUM_FRONT_HEIGHTS - 1) {
+		if (btnClawPos1.changedToPressed()) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-      frontGoalHeight++;
-			frontArm->setMaxVelocity(5000);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
-    } else if (btnFrontUp.changedToPressed() && frontGoalHeight > 0) {
-      frontGoalHeight--;
-			frontArm->setMaxVelocity(50);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
+      frontGoalHeight = 1;
+			clawCtl->setMaxVelocity(75);
+      clawCtl->setTarget(frontHeights[1]);
+    } else if (btnResetPos.changedToPressed()) {
+      frontGoalHeight = 0;
+			clawCtl->setMaxVelocity(75);
+      clawCtl->setTarget(frontHeights[0]);
     }
 
 		// back
-		if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
+		if (btnArmDown.changedToPressed() && backGoalHeight < NUM_ARM_HEIGHTS - 1) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
       backGoalHeight++;
-      backArm->setTarget(backHeights[backGoalHeight]);
-    } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
+      Arm->setTarget(backHeights[backGoalHeight]);
+    } else if (btnArmUp.changedToPressed() && backGoalHeight > 0) {
       backGoalHeight--;
-      backArm->setTarget(backHeights[backGoalHeight]);
+      Arm->setTarget(backHeights[backGoalHeight]);
     }
 
-		if (btnClawHold.changedToPressed() && !clawHold) {
-			clawHold = 1;
-			clawCtl->setTarget(CLAW_HOLD_TARGET);
-		} else if (btnClawRelease.changedToPressed() && clawHold) {
-			clawHold = 0;
-			clawCtl->setTarget(CLAW_RELEASED_TARGET);
+		if (btnClaw.changedToPressed()) {
+			clawHold = !clawHold;
+			piston.set_value(clawHold);
 		}
 
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();
 		}
 
-		//back arm
-		/*if (ctrl->get_digital(DIGITAL_L1)) {
-			blLever = -96;
-			brLever = 96;
-		} else if (ctrl->get_digital(DIGITAL_L2)) {
-			blLever = 96;
-			brLever = -96;
-		} else {
-			blLever = 0;
-			brLever = 0;
-		}*/
-
-		//claw
-		/*if (ctrl->get_digital(DIGITAL_X)){
-			claw = -100;
-		}
-		else if(ctrl->get_digital(DIGITAL_Y)){
-			claw = 100;
-		}*/
-
-		// delay to save resources
 		pros::delay(20);
 	}
 }
