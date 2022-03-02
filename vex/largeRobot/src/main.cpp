@@ -25,8 +25,42 @@ pros::Motor claw(CLAW_PORT);
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
 	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
-	.withMaxVelocity(50)
 	.build();
+
+std::shared_ptr<okapi::AsyncPositionController<double, double>> backArm =
+	okapi::AsyncPosControllerBuilder().withMotor({BACK_LEVER_LEFT_PORT, -BACK_LEVER_RIGHT_PORT})
+	.build();
+
+std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
+		okapi::AsyncPosControllerBuilder().withMotor(CLAW_PORT)
+		.build();
+
+int ALLOW_TEST_AUTON = 1;
+
+//
+
+const int NUM_FRONT_HEIGHTS = 4;
+const int frontHeights[NUM_FRONT_HEIGHTS] = {
+	0,
+	-500,
+	-1000,
+	-1450
+};
+
+const int NUM_BACK_HEIGHTS = 4;
+const int backHeights[NUM_BACK_HEIGHTS] = {
+	0,
+	1000,
+	2000,
+	3000
+};
+
+int frontGoalHeight = 0;
+int backGoalHeight = 0;
+int clawHold = 0;
+
+#define CLAW_HOLD_TARGET (-260)
+#define CLAW_RELEASED_TARGET 0
 
 /**
  * A callback function for LLEMU's center button.
@@ -80,6 +114,8 @@ void disabled() {
  */
 void competition_initialize() {
 	pros::lcd::set_text(0, "Competition Initialized");
+
+	ALLOW_TEST_AUTON = 0;
 }
 
 /**
@@ -97,6 +133,11 @@ void competition_initialize() {
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
 
+	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
+    .withLimits({100.0, 100.0, 100.0})
+    .withOutput(robo->chassis)
+    .buildMotionProfileController();
+
 	// Generate an "S-curve" that takes us through the given waypoints.
 	// S-curves let us move as accurate as we can, instead of repeatedly doing
 	// "turn" and then "move straight".
@@ -104,21 +145,54 @@ void autonomous() {
 	// You can still do them as normal, but you have to make sure that the
 	// profile controller is settled first.
 
-	// Note: This curve is just for testing. Feel free to modify any of this when
-	// actually programming the auton routines.
-	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
-    .withLimits({0.2, 0.4, 2.0})
-    .withOutput(robo->chassis)
-    .buildMotionProfileController();
-
+	// This might overshoot the target a bit but that's OK.
+	// We'd rather overshoot than undershoot. If we undershoot
+	// then we don't get anything. If we overshoot then we'll
+	// push the goal a bit but we can still get it.
 	profileController->generatePath({
-        {10_in, -1.72_in, 32_deg},
-        {0_ft, 0_ft, 0_deg}},
-        "Path1" // Profile name
+        {0_in, 0_ft, 0_deg},
+        {-54_in, 0_ft, 0_deg}},
+        "MoveToMiddleGoal" // Profile name
   );
 
-	profileController->setTarget("Path1", true);
+	profileController->setTarget("MoveToMiddleGoal", true);
+
+	// Claw in released position
+	// Lower back arm to ground position.
+	backGoalHeight = 3;
+	backArm->setTarget(backHeights[backGoalHeight]);
+
   profileController->waitUntilSettled();
+	backArm->waitUntilSettled();
+
+	// Back arm is now lowered, hold the goal in the claw.
+	clawCtl->setTarget(CLAW_HOLD_TARGET);
+
+	// This seems to not deadlock, even though it clamps down hard on the goal.
+	clawCtl->waitUntilSettled();
+
+	// Raise back arm to raised position.
+	backGoalHeight = 0;
+	backArm->setTarget(backHeights[backGoalHeight]);
+	// NB: Don't wait before moving.
+
+	// Start moving without waiting.
+	profileController->generatePath({
+        {0_in, 0_in, 0_deg},
+        {-60_in, 0_ft, 0_deg}},
+        "ReturnFromMiddleGoal" // Profile name
+  );
+
+	// flip this boolean to move backwards instead of forwards
+	// apparently the underlying pathfinder library can't generate
+	// negative velocities / backwards paths, so this is the workaround.
+	profileController->setTarget("ReturnFromMiddleGoal", false);
+  profileController->waitUntilSettled();
+
+
+	// Lower front arm to ground position.
+	//frontGoalHeight = 3;
+	//frontArm->setTarget(frontHeights[frontGoalHeight]);
 }
 
 /**
@@ -135,15 +209,14 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 
-const int NUM_HEIGHTS = 2;
-const int height1 = 0;
-const int height2 = 1000;
-
-const int heights[NUM_HEIGHTS] = {height1, height2}; //, height3, height4};
-
 void opcontrol() {
-  //autonomous();
-	int goalHeight = 0;
+	// Ensure that we keep the same state we had in auton
+	// For some reason motors the motors disengaged when switching to auton.
+	// No idea why, but I don't have time to find out why right now
+	clawHold = 1;
+	backGoalHeight = 0;
+	clawCtl->setTarget(CLAW_HOLD_TARGET);
+	backArm->setTarget(backHeights[backGoalHeight]);
 
 	pros::lcd::set_text(0, "Op-Control");
 	pros::Controller *ctrl = robo->getController();
@@ -155,8 +228,15 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
-	ControllerButton btnUp(ControllerDigital::B);
-	ControllerButton btnDown(ControllerDigital::A);
+	ControllerButton btnTestAuton(ControllerD
+		igital::A);
+
+	ControllerButton btnFrontUp(ControllerDigital::R1);
+	ControllerButton btnFrontDown(ControllerDigital::R2);
+	ControllerButton btnBackUp(ControllerDigital::L1);
+	ControllerButton btnBackDown(ControllerDigital::L2);
+	ControllerButton btnClawHold(ControllerDigital::X);
+	ControllerButton btnClawRelease(ControllerDigital::Y);
 
 	while (1) {
 
@@ -166,45 +246,54 @@ void opcontrol() {
 	  robo->arcadeDrive();
 #endif
 
+#ifdef USE_INTEGRATED_ENCODERS
+		pros::lcd::set_text(1, "Using Integrated Encoders");
+		pros::lcd::set_text(2, "Arduino encoders disabled in-code");
+#else
 		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(enc1.get()));
 		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(enc2.get()));
 
 #ifdef HAS_MIDDLE_ENCODER
 		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(enc3.get()));
 #endif
+#endif
 
 		//front arm
-		if (btnUp.changedToPressed() && goalHeight < NUM_HEIGHTS - 1) {
+		if (btnFrontDown.changedToPressed() && frontGoalHeight < NUM_FRONT_HEIGHTS - 1) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-      goalHeight++;
-      frontArm->setTarget(heights[goalHeight]);
-    } else if (btnDown.changedToPressed() && goalHeight > 0) {
-      goalHeight--;
-      frontArm->setTarget(heights[goalHeight]);
+      frontGoalHeight++;
+			frontArm->setMaxVelocity(5000);
+      frontArm->setTarget(frontHeights[frontGoalHeight]);
+    } else if (btnFrontUp.changedToPressed() && frontGoalHeight > 0) {
+      frontGoalHeight--;
+			frontArm->setMaxVelocity(50);
+      frontArm->setTarget(frontHeights[frontGoalHeight]);
     }
 
-		if (ctrl->get_digital(DIGITAL_R1) && ctrl->get_digital(DIGITAL_R2)) {
-			frontArm->flipDisable(true);
-			flLever = 56;
-			frLever = -56;
-		} else if (ctrl->get_digital(DIGITAL_R1)) {
-			frontArm->flipDisable(true);
-			flLever = 127;
-			frLever = -127;
-		} else if (ctrl->get_digital(DIGITAL_R2)) {
-			frontArm->flipDisable(true);
-			flLever = -127;
-			frLever = 127;
-		} else if (ctrl->get_digital(DIGITAL_A)) {
-			frontArm->setTarget(1000);
-		} else {
-			if (frontArm->isDisabled()) {
-				flLever = 0;
-				frLever = 0;
-			}
+		// back
+		if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
+      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
+      backGoalHeight++;
+      backArm->setTarget(backHeights[backGoalHeight]);
+    } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
+      backGoalHeight--;
+      backArm->setTarget(backHeights[backGoalHeight]);
+    }
+
+		if (btnClawHold.changedToPressed() && !clawHold) {
+			clawHold = 1;
+			clawCtl->setTarget(CLAW_HOLD_TARGET);
+		} else if (btnClawRelease.changedToPressed() && clawHold) {
+			clawHold = 0;
+			clawCtl->setTarget(CLAW_RELEASED_TARGET);
 		}
+
+		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
+			autonomous();
+		}
+
 		//back arm
-		if (ctrl->get_digital(DIGITAL_L1)) {
+		/*if (ctrl->get_digital(DIGITAL_L1)) {
 			blLever = -96;
 			brLever = 96;
 		} else if (ctrl->get_digital(DIGITAL_L2)) {
@@ -213,18 +302,15 @@ void opcontrol() {
 		} else {
 			blLever = 0;
 			brLever = 0;
-		}
+		}*/
 
 		//claw
-		if (ctrl->get_digital(DIGITAL_X)){
+		/*if (ctrl->get_digital(DIGITAL_X)){
 			claw = -100;
 		}
 		else if(ctrl->get_digital(DIGITAL_Y)){
 			claw = 100;
-		}
-		else{
-			claw = 0;
-		}
+		}*/
 
 		// delay to save resources
 		pros::delay(20);
@@ -244,6 +330,7 @@ void opcontrol() {
 // }
 // else {
 //   claw.move_velocity(0);
+
 // }
 //toggle pistons with touch button
 // if (touch_button.get_value()) {
