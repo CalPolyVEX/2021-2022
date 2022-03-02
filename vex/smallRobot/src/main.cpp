@@ -15,7 +15,7 @@ RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEF
 #define INTAKE_PORT 4
 #define ARM_LEFT 5
 #define ARM_RIGHT 6 //move together
-#define CLAW_PORT 10
+#define CLAW_PORT 16
 
 // pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
 // pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
@@ -28,9 +28,9 @@ pros::ADIDigitalOut piston (PISTON_PORT);
 // 	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
 // 	.build();
 //
-// std::shared_ptr<okapi::AsyncPositionController<double, double>> backArm =
-// 	okapi::AsyncPosControllerBuilder().withMotor({BACK_LEVER_LEFT_PORT, -BACK_LEVER_RIGHT_PORT})
-// 	.build();
+std::shared_ptr<okapi::AsyncPositionController<double, double>> Arm =
+	okapi::AsyncPosControllerBuilder().withMotor({ARM_LEFT, -ARM_RIGHT})
+	.build();
 
 std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
 		okapi::AsyncPosControllerBuilder().withMotor(CLAW_PORT)
@@ -43,16 +43,16 @@ int ALLOW_TEST_AUTON = 1;
 const int NUM_CLAWPOS_HEIGHTS = 3;
 const int frontHeights[NUM_CLAWPOS_HEIGHTS] = {
 	0,
-	-100,
+	-2000,
 	-200
 };
 
-const int NUM_BACK_HEIGHTS = 4;
-const int backHeights[NUM_BACK_HEIGHTS] = {
+const int NUM_ARM_HEIGHTS = 4;
+const int backHeights[NUM_ARM_HEIGHTS] = {
 	0,
-	1000,
-	2000,
-	3000
+	-2000,
+	-4000,
+	-6000
 };
 
 int frontGoalHeight = 0;
@@ -231,8 +231,8 @@ void opcontrol() {
 	ControllerButton btnTestAuton(ControllerDigital::X);
 	ControllerButton btnResetPos(ControllerDigital::B);
 	ControllerButton btnClawPos1(ControllerDigital::A);
-	// ControllerButton btnBackUp(ControllerDigital::L1);
-	// ControllerButton btnBackDown(ControllerDigital::L2);
+	ControllerButton btnArmDown(ControllerDigital::L1);
+	ControllerButton btnArmUp(ControllerDigital::L2);
 	ControllerButton btnClaw(ControllerDigital::X);
 	//ControllerButton btnClawRelease(ControllerDigital::Y);
 
@@ -257,26 +257,26 @@ void opcontrol() {
 #endif
 
 		//front arm
-		if (btnClawPos1.changedToPressed() && frontGoalHeight != 1) {
+		if (btnClawPos1.changedToPressed()) {
       // If the goal height is not at maximum and the up button is pressed, increase the setpoint
       frontGoalHeight = 1;
-			clawCtl->setMaxVelocity(50);
+			clawCtl->setMaxVelocity(75);
       clawCtl->setTarget(frontHeights[1]);
-    } else if (btnResetPos.changedToPressed() && frontGoalHeight > 0) {
+    } else if (btnResetPos.changedToPressed()) {
       frontGoalHeight = 0;
-			clawCtl->setMaxVelocity(50);
+			clawCtl->setMaxVelocity(75);
       clawCtl->setTarget(frontHeights[0]);
     }
 
 		// back
-		// if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
-    //   // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-    //   backGoalHeight++;
-    //   backArm->setTarget(backHeights[backGoalHeight]);
-    // } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
-    //   backGoalHeight--;
-    //   backArm->setTarget(backHeights[backGoalHeight]);
-    // }
+		if (btnArmDown.changedToPressed() && backGoalHeight < NUM_ARM_HEIGHTS - 1) {
+      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
+      backGoalHeight++;
+      Arm->setTarget(backHeights[backGoalHeight]);
+    } else if (btnArmUp.changedToPressed() && backGoalHeight > 0) {
+      backGoalHeight--;
+      Arm->setTarget(backHeights[backGoalHeight]);
+    }
 
 		if (btnClaw.changedToPressed()) {
 			clawHold = !clawHold;
