@@ -1,7 +1,7 @@
 #ifndef ROBOT_SPECIFICS_H
 #define ROBOT_SPECIFICS_H
 
-// #define SMALL_ROBOT_ATREIDES
+//#define SMALL_ROBOT_ATREIDES
 #define LARGE_ROBOT_HARKONNEN
 
 // Average radius of the two different wheel types.
