@@ -1,6 +1,12 @@
 #ifndef ROBOT_SPECIFICS_H
 #define ROBOT_SPECIFICS_H
 
+// Header-based robot specifics configuration
+// Change configuration by uncommenting lines or changing the value
+// of defines.
+// ---
+
+// Change the lines here based on what robot we're compiling for.
 // #define SMALL_ROBOT_ATREIDES
 #define LARGE_ROBOT_HARKONNEN
 
@@ -19,7 +25,8 @@
   // https://okapilib.github.io/OkapiLib/classokapi_1_1ChassisScales.html#a7e35f22518d4f74105ffa741b40dcb17
   #define WHEEL_TRACK 16.2_in
 
-  // our electrical setup is messed up so just use the integrated encoders :(
+  // our electrical setup is messed up on the large robot
+  // so just use the integrated encoders :(
   #define USE_INTEGRATED_ENCODERS
 #endif
 
