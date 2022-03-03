@@ -28,6 +28,12 @@
   // our electrical setup is messed up on the large robot
   // so just use the integrated encoders :(
   #define USE_INTEGRATED_ENCODERS
+
+  // Drivetrain
+  #define LEFT_WHEELS_1_PORT 1
+  #define LEFT_WHEELS_2_PORT 4
+  #define RIGHT_WHEELS_1_PORT 2
+  #define RIGHT_WHEELS_2_PORT 3
 #endif
 
 #ifdef SMALL_ROBOT_ATREIDES
@@ -42,6 +48,12 @@
 
   #define DRIVE_MODE ARCADE
   #define WHEEL_TRACK 12.75_in
+
+  // Drivetrain
+  #define LEFT_WHEELS_1_PORT 2
+  #define LEFT_WHEELS_2_PORT 3
+  #define RIGHT_WHEELS_1_PORT 17
+  #define RIGHT_WHEELS_2_PORT 18
 #endif
 
 #endif

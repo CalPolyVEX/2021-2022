@@ -3,11 +3,6 @@
 #include "arduinoSensors.hpp"
 #include "robot_specifics.h"
 
-#define LEFT_WHEELS_1_PORT 1
-#define LEFT_WHEELS_2_PORT 4
-#define RIGHT_WHEELS_1_PORT 2
-#define RIGHT_WHEELS_2_PORT 3
-
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
 
@@ -298,27 +293,7 @@ void opcontrol() {
 			autonomous();
 		}
 
-		//back arm
-		/*if (ctrl->get_digital(DIGITAL_L1)) {
-			blLever = -96;
-			brLever = 96;
-		} else if (ctrl->get_digital(DIGITAL_L2)) {
-			blLever = 96;
-			brLever = -96;
-		} else {
-			blLever = 0;
-			brLever = 0;
-		}*/
-
-		//claw
-		/*if (ctrl->get_digital(DIGITAL_X)){
-			claw = -100;
-		}
-		else if(ctrl->get_digital(DIGITAL_Y)){
-			claw = 100;
-		}*/
-
-		// delay to save resources
+		// Required to avoid us taking up too much time from other tasks.
 		pros::delay(20);
 	}
 }
