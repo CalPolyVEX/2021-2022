@@ -290,52 +290,8 @@ void opcontrol() {
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();
 		}
-
-		//back arm
-		/*if (ctrl->get_digital(DIGITAL_L1)) {
-			blLever = -96;
-			brLever = 96;
-		} else if (ctrl->get_digital(DIGITAL_L2)) {
-			blLever = 96;
-			brLever = -96;
-		} else {
-			blLever = 0;
-			brLever = 0;
-		}*/
-
-		//claw
-		/*if (ctrl->get_digital(DIGITAL_X)){
-			claw = -100;
-		}
-		else if(ctrl->get_digital(DIGITAL_Y)){
-			claw = 100;
-		}*/
-
+		
 		// delay to save resources
 		pros::delay(20);
 	}
 }
-
-
-//Random commented out code in case we'd like to reference anything:
-
-
-//open/close claw based on left triggers
-// if (master.get_digital(DIGITAL_L1)) {
-//   claw.move_velocity(100);
-// }
-// else if (master.get_digital(DIGITAL_L2)) {
-//   claw.move_velocity(-100);
-// }
-// else {
-//   claw.move_velocity(0);
-// }
-//toggle pistons with touch button
-// if (touch_button.get_value()) {
-// 	piston_1.set_value(true);
-// 	piston_2.set_value(true);
-// }
-// else {
-// 	piston_1.set_value(false);
-// 	piston_2.set_value(false);
-// }
