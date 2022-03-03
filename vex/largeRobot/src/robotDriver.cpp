@@ -26,10 +26,10 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
 void RobotDriver::tankDrive() {
   int left = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
   int right = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
-  this->frontLeftMotor = left;
-  this->backLeftMotor = left;
-  this->frontRightMotor = right;
-  this->backRightMotor = right;
+  this->frontLeftMotor = -left;
+  this->backLeftMotor = -left;
+  this->frontRightMotor = -right;
+  this->backRightMotor = -right;
 }
 
 void RobotDriver::arcadeDrive() {
