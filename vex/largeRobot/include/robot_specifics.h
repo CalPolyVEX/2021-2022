@@ -8,6 +8,9 @@
 // The small and big robot both use the same values, for now.
 #define WHEEL_DIAMETER 4.1_in
 
+// just something for skills so we get like 20 points every time
+//#define AUTONOMOUS_ONLY_DRIVE_FORWARD
+
 #ifdef LARGE_ROBOT_HARKONNEN
   #define DRIVE_MODE TANK
   #define MIDDLE_IDLE_WHEEL_DIAMETER WHEEL_DIAMETER

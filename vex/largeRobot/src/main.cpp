@@ -133,6 +133,13 @@ void competition_initialize() {
 void autonomous() {
 	pros::lcd::set_text(0, "Autonomous");
 
+	#ifdef AUTONOMOUS_ONLY_DRIVE_FORWARD
+		robo->chassis->setMaxVelocity(100000);
+		robo->chassis->moveDistance(1000_m);
+
+		return;
+	#endif
+
 	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
     .withLimits({100.0, 100.0, 100.0})
     .withOutput(robo->chassis)
