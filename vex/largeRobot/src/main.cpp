@@ -50,9 +50,9 @@ const int frontHeights[NUM_FRONT_HEIGHTS] = {
 const int NUM_BACK_HEIGHTS = 4;
 const int backHeights[NUM_BACK_HEIGHTS] = {
 	0,
-	1000,
-	2000,
-	3000
+	-1000,
+	-2000,
+	-3000
 };
 
 int frontGoalHeight = 0;
@@ -159,8 +159,8 @@ void autonomous() {
 
 	// Claw in released position
 	// Lower back arm to ground position.
-	backGoalHeight = 3;
-	backArm->setTarget(backHeights[backGoalHeight]);
+	// backGoalHeight = 3;
+	// backArm->setTarget(backHeights[backGoalHeight]);
 
   profileController->waitUntilSettled();
 	backArm->waitUntilSettled();
@@ -172,7 +172,7 @@ void autonomous() {
 	clawCtl->waitUntilSettled();
 
 	// Raise back arm to raised position.
-	backGoalHeight = 0;
+	backGoalHeight = 3;
 	backArm->setTarget(backHeights[backGoalHeight]);
 	// NB: Don't wait before moving.
 
@@ -228,13 +228,12 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
-	ControllerButton btnTestAuton(ControllerD
-		igital::A);
+	ControllerButton btnTestAuton(ControllerDigital::A);
 
 	ControllerButton btnFrontUp(ControllerDigital::R1);
 	ControllerButton btnFrontDown(ControllerDigital::R2);
-	ControllerButton btnBackUp(ControllerDigital::L1);
-	ControllerButton btnBackDown(ControllerDigital::L2);
+	ControllerButton btnBackDown(ControllerDigital::L1);
+	ControllerButton btnBackUp(ControllerDigital::L2);
 	ControllerButton btnClawHold(ControllerDigital::X);
 	ControllerButton btnClawRelease(ControllerDigital::Y);
 
@@ -291,53 +290,8 @@ void opcontrol() {
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();
 		}
-
-		//back arm
-		/*if (ctrl->get_digital(DIGITAL_L1)) {
-			blLever = -96;
-			brLever = 96;
-		} else if (ctrl->get_digital(DIGITAL_L2)) {
-			blLever = 96;
-			brLever = -96;
-		} else {
-			blLever = 0;
-			brLever = 0;
-		}*/
-
-		//claw
-		/*if (ctrl->get_digital(DIGITAL_X)){
-			claw = -100;
-		}
-		else if(ctrl->get_digital(DIGITAL_Y)){
-			claw = 100;
-		}*/
-
+		
 		// delay to save resources
 		pros::delay(20);
 	}
 }
-
-
-//Random commented out code in case we'd like to reference anything:
-
-
-//open/close claw based on left triggers
-// if (master.get_digital(DIGITAL_L1)) {
-//   claw.move_velocity(100);
-// }
-// else if (master.get_digital(DIGITAL_L2)) {
-//   claw.move_velocity(-100);
-// }
-// else {
-//   claw.move_velocity(0);
-
-// }
-//toggle pistons with touch button
-// if (touch_button.get_value()) {
-// 	piston_1.set_value(true);
-// 	piston_2.set_value(true);
-// }
-// else {
-// 	piston_1.set_value(false);
-// 	piston_2.set_value(false);
-// }
