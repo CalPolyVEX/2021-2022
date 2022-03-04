@@ -6,7 +6,7 @@
 #define LEFT_WHEELS_1_PORT 1
 #define LEFT_WHEELS_2_PORT 4
 #define RIGHT_WHEELS_1_PORT 2
-#define RIGHT_WHEELS_2_PORT 3
+#define RIGHT_WHEELS_2_PORT 5
 
 //RobotDriver
 RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
@@ -59,7 +59,7 @@ int frontGoalHeight = 0;
 int backGoalHeight = 0;
 int clawHold = 0;
 
-#define CLAW_HOLD_TARGET (-260)
+#define CLAW_HOLD_TARGET (230)
 #define CLAW_RELEASED_TARGET 0
 
 /**
@@ -172,7 +172,7 @@ void autonomous() {
 	clawCtl->waitUntilSettled();
 
 	// Raise back arm to raised position.
-	backGoalHeight = 3;
+	backGoalHeight = 2;
 	backArm->setTarget(backHeights[backGoalHeight]);
 	// NB: Don't wait before moving.
 
@@ -290,7 +290,7 @@ void opcontrol() {
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();
 		}
-		
+
 		// delay to save resources
 		pros::delay(20);
 	}
