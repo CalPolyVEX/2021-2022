@@ -2,7 +2,12 @@
 #include "robotDriver.h"
 #include "arduinoSensors.hpp"
 #include "robot_specifics.h"
+
+#ifdef LARGE_ROBOT_HARKONNEN
 #include "harkonnen/harkonnen.h"
+#else
+#include "atreides/atreides.h"
+#endif
 
 int ALLOW_TEST_AUTON = 1;
 
@@ -57,7 +62,11 @@ void competition_initialize() {
  */
 
 void autonomous() {
+#ifdef LARGE_ROBOT_HARKONNEN
 	hk_autonomous();
+#else
+	at_autonomous();
+#endif
 }
 
 /**
@@ -75,7 +84,11 @@ void autonomous() {
  */
 
 void opcontrol() {
+#ifdef LARGE_ROBOT_HARKONNEN
 	hk_opcontrol_init();
+#else
+	at_opcontrol_init();
+#endif
 
 	ArduinoEncoder enc1 = arduino_encoder_create(0);
 	ArduinoEncoder enc2 = arduino_encoder_create(1);
@@ -84,7 +97,11 @@ void opcontrol() {
 	ArduinoEncoder enc3 = arduino_encoder_create(2);
 #endif
 
+#ifdef SMALL_ROBOT_ATREIDES
+	ControllerButton btnTestAuton(ControllerDigital::X);
+#else
 	ControllerButton btnTestAuton(ControllerDigital::A);
+#endif
 
 	while (1) {
 
@@ -100,7 +117,11 @@ void opcontrol() {
 #endif
 #endif
 
+#ifdef LARGE_ROBOT_HARKONNEN
 		hk_opcontrol_update();
+#else
+		at_opcontrol_update();
+#endif
 
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();

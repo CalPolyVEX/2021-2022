@@ -40,7 +40,7 @@ void RobotDriver::tankDrive() {
 void RobotDriver::arcadeDrive() {
   int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
   int horizontal = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-  this->frontLeftMotor = -(horizontal - vertical);
+  this->frontLeftMotor = (horizontal - vertical);
   this->backLeftMotor = -(horizontal - vertical);
   this->frontRightMotor = vertical + horizontal;
   this->backRightMotor = vertical + horizontal;

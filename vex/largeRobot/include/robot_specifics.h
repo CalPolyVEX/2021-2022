@@ -7,8 +7,8 @@
 // ---
 
 // Change the lines here based on what robot we're compiling for.
-// #define SMALL_ROBOT_ATREIDES
-#define LARGE_ROBOT_HARKONNEN
+#define SMALL_ROBOT_ATREIDES
+//#define LARGE_ROBOT_HARKONNEN
 
 // Average radius of the two different wheel types.
 // The small and big robot both use the same values, for now.
@@ -42,12 +42,6 @@
 
   #define DRIVE_MODE ARCADE
   #define WHEEL_TRACK 12.75_in
-
-  // Drivetrain
-  #define LEFT_WHEELS_1_PORT 2
-  #define LEFT_WHEELS_2_PORT 3
-  #define RIGHT_WHEELS_1_PORT 17
-  #define RIGHT_WHEELS_2_PORT 18
 #endif
 
 #endif
