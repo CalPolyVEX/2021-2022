@@ -4,7 +4,11 @@
 #include "okapi/api/device/rotarysensor/continuousRotarySensor.hpp"
 #include "robot_specifics.h"
 
+#ifdef HAS_MIDDLE_ENCODER
+#define ARDUINO_ENCODER_COUNT 3
+#else
 #define ARDUINO_ENCODER_COUNT 2
+#endif
 
 #define ARDUINO_LEFT_ENCODER 0
 #define ARDUINO_RIGHT_ENCODER 1

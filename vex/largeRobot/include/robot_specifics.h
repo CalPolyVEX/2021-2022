@@ -42,6 +42,8 @@
 
   #define DRIVE_MODE ARCADE
   #define WHEEL_TRACK 12.75_in
+
+  #define USE_INTEGRATED_ENCODERS
 #endif
 
 #endif

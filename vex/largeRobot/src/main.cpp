@@ -98,7 +98,7 @@ void opcontrol() {
 #endif
 
 #ifdef SMALL_ROBOT_ATREIDES
-	ControllerButton btnTestAuton(ControllerDigital::X);
+	ControllerButton btnTestAuton(ControllerDigital::R2);
 #else
 	ControllerButton btnTestAuton(ControllerDigital::A);
 #endif

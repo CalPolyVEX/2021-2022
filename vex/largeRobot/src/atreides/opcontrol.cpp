@@ -20,9 +20,9 @@ void at_opcontrol_update() {
   at_drivetrain->arcadeDrive();
 
   if (at_btnClawPos1.changedToPressed()) {
-    at_clawDeployMotor.stepTo(1, 75);
+    at_clawDeployMotor.stepExtend();
   } else if (at_btnResetPos.changedToPressed()) {
-    at_clawDeployMotor.stepTo(0, 75);
+    at_clawDeployMotor.stepRetract();
   }
 
   if (at_btnArmDown.changedToPressed()) {
@@ -40,7 +40,7 @@ void at_opcontrol_update() {
     intakeRunning = !intakeRunning;
 
     if (intakeRunning) {
-      at_frontIntake.move_voltage(-6000);
+      at_frontIntake.move_voltage(6000);
     } else {
       at_frontIntake.move_voltage(0);
     }

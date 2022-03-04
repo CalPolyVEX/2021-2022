@@ -30,8 +30,7 @@ SteppedMotor* at_backClawArm = new SteppedMotor (
 
 SteppedMotor at_clawDeployMotor(
   {16},
-  // TODO: Adjust for actual physical steps.
-  {0, -2500, -200});
+  {0, -500, -2500});
 
 // Device: Claw Close Piston
 

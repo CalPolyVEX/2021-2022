@@ -9,11 +9,15 @@
 using namespace okapi;
 
 class RobotDriver {
-  private:
-  pros::Motor frontLeftMotor;
-  pros::Motor frontRightMotor;
-  pros::Motor backLeftMotor;
-  pros::Motor backRightMotor;
+private:
+  // Use the Motor wrapper from okapi. The Motor from PROS has a big footgun
+  // where using it in "reversed" mode globally affects all other code using
+  // the motor, such as okapi, while the reversed flag in okapi only applies to
+  // that motor Object.
+  okapi::Motor frontLeftMotor;
+  okapi::Motor frontRightMotor;
+  okapi::Motor backLeftMotor;
+  okapi::Motor backRightMotor;
   pros::Controller controller;
 
 public:

@@ -4,15 +4,15 @@
 
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort)
- : frontLeftMotor(abs(frontLeftMotorPort), frontLeftMotorPort < 0),
-   frontRightMotor(abs(frontRightMotorPort), frontRightMotorPort < 0),
-   backLeftMotor(abs(backLeftMotorPort), backLeftMotorPort < 0),
-   backRightMotor(abs(backRightMotorPort), backRightMotorPort < 0),
+ : frontLeftMotor(frontLeftMotorPort),
+   frontRightMotor(frontRightMotorPort),
+   backLeftMotor(backLeftMotorPort),
+   backRightMotor(backRightMotorPort),
  controller(pros::E_CONTROLLER_MASTER)
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
-  .withMotors({frontLeftMotorPort, backLeftMotorPort}, {frontRightMotorPort, backRightMotorPort})
+  .withMotors({-3, -2}, {15, 17})
 #ifndef USE_INTEGRATED_ENCODERS
 #ifndef ARDUINO_MIDDLE_ENCODER
   .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
@@ -38,12 +38,12 @@ void RobotDriver::tankDrive() {
 }
 
 void RobotDriver::arcadeDrive() {
-  int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-  int horizontal = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-  this->frontLeftMotor = (horizontal - vertical);
-  this->backLeftMotor = -(horizontal - vertical);
-  this->frontRightMotor = vertical + horizontal;
-  this->backRightMotor = vertical + horizontal;
+  int32_t vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+  int32_t horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+  this->frontLeftMotor.moveVoltage((vertical + horizontal) * 12000 / 127);
+  this->backLeftMotor.moveVoltage((vertical + horizontal) * 12000 / 127);
+  this->frontRightMotor.moveVoltage((vertical - horizontal) * 12000 / 127);
+  this->backRightMotor.moveVoltage((vertical - horizontal) * 12000 / 127);
 }
 
 pros::Controller *RobotDriver::getController() {
