@@ -28,12 +28,6 @@
   // our electrical setup is messed up on the large robot
   // so just use the integrated encoders :(
   #define USE_INTEGRATED_ENCODERS
-
-  // Drivetrain
-  #define LEFT_WHEELS_1_PORT 1
-  #define LEFT_WHEELS_2_PORT 4
-  #define RIGHT_WHEELS_1_PORT 2
-  #define RIGHT_WHEELS_2_PORT 3
 #endif
 
 #ifdef SMALL_ROBOT_ATREIDES

@@ -2,76 +2,9 @@
 #include "robotDriver.h"
 #include "arduinoSensors.hpp"
 #include "robot_specifics.h"
-
-//RobotDriver
-RobotDriver *robo = new RobotDriver(LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
-
-#define FRONT_LEVER_LEFT_PORT 15
-#define FRONT_LEVER_RIGHT_PORT 16
-#define BACK_LEVER_LEFT_PORT 12
-#define BACK_LEVER_RIGHT_PORT 13
-#define CLAW_PORT 19
-
-pros::Motor flLever(FRONT_LEVER_LEFT_PORT);
-pros::Motor frLever(FRONT_LEVER_RIGHT_PORT);
-pros::Motor blLever(BACK_LEVER_LEFT_PORT);
-pros::Motor brLever(BACK_LEVER_RIGHT_PORT);
-pros::Motor claw(CLAW_PORT);
-
-std::shared_ptr<okapi::AsyncPositionController<double, double>> frontArm =
-	okapi::AsyncPosControllerBuilder().withMotor({FRONT_LEVER_LEFT_PORT, -FRONT_LEVER_RIGHT_PORT})
-	.build();
-
-std::shared_ptr<okapi::AsyncPositionController<double, double>> backArm =
-	okapi::AsyncPosControllerBuilder().withMotor({BACK_LEVER_LEFT_PORT, -BACK_LEVER_RIGHT_PORT})
-	.build();
-
-std::shared_ptr<okapi::AsyncPositionController<double, double>> clawCtl =
-		okapi::AsyncPosControllerBuilder().withMotor(CLAW_PORT)
-		.build();
+#include "harkonnen/harkonnen.h"
 
 int ALLOW_TEST_AUTON = 1;
-
-//
-
-const int NUM_FRONT_HEIGHTS = 4;
-const int frontHeights[NUM_FRONT_HEIGHTS] = {
-	0,
-	-500,
-	-1000,
-	-1450
-};
-
-const int NUM_BACK_HEIGHTS = 4;
-const int backHeights[NUM_BACK_HEIGHTS] = {
-	0,
-	1000,
-	2000,
-	3000
-};
-
-int frontGoalHeight = 0;
-int backGoalHeight = 0;
-int clawHold = 0;
-
-#define CLAW_HOLD_TARGET (-260)
-#define CLAW_RELEASED_TARGET 0
-
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -85,8 +18,6 @@ void initialize() {
 	pros::lcd::initialize();
 
 	pros::lcd::set_text(0, "Robot Initialized");
-
-	pros::lcd::register_btn1_cb(on_center_button);
 }
 
 /**
@@ -126,75 +57,7 @@ void competition_initialize() {
  */
 
 void autonomous() {
-	pros::lcd::set_text(0, "Autonomous");
-
-	#ifdef AUTONOMOUS_ONLY_DRIVE_FORWARD
-		robo->chassis->setMaxVelocity(100000);
-		robo->chassis->moveDistance(1000_m);
-
-		return;
-	#endif
-
-	std::shared_ptr<okapi::AsyncMotionProfileController> profileController = okapi::AsyncMotionProfileControllerBuilder()
-    .withLimits({100.0, 100.0, 100.0})
-    .withOutput(robo->chassis)
-    .buildMotionProfileController();
-
-	// Generate an "S-curve" that takes us through the given waypoints.
-	// S-curves let us move as accurate as we can, instead of repeatedly doing
-	// "turn" and then "move straight".
-	//
-	// You can still do them as normal, but you have to make sure that the
-	// profile controller is settled first.
-
-	// This might overshoot the target a bit but that's OK.
-	// We'd rather overshoot than undershoot. If we undershoot
-	// then we don't get anything. If we overshoot then we'll
-	// push the goal a bit but we can still get it.
-	profileController->generatePath({
-        {0_in, 0_ft, 0_deg},
-        {-54_in, 0_ft, 0_deg}},
-        "MoveToMiddleGoal" // Profile name
-  );
-
-	profileController->setTarget("MoveToMiddleGoal", true);
-
-	// Claw in released position
-	// Lower back arm to ground position.
-	backGoalHeight = 3;
-	backArm->setTarget(backHeights[backGoalHeight]);
-
-  profileController->waitUntilSettled();
-	backArm->waitUntilSettled();
-
-	// Back arm is now lowered, hold the goal in the claw.
-	clawCtl->setTarget(CLAW_HOLD_TARGET);
-
-	// This seems to not deadlock, even though it clamps down hard on the goal.
-	clawCtl->waitUntilSettled();
-
-	// Raise back arm to raised position.
-	backGoalHeight = 0;
-	backArm->setTarget(backHeights[backGoalHeight]);
-	// NB: Don't wait before moving.
-
-	// Start moving without waiting.
-	profileController->generatePath({
-        {0_in, 0_in, 0_deg},
-        {-60_in, 0_ft, 0_deg}},
-        "ReturnFromMiddleGoal" // Profile name
-  );
-
-	// flip this boolean to move backwards instead of forwards
-	// apparently the underlying pathfinder library can't generate
-	// negative velocities / backwards paths, so this is the workaround.
-	profileController->setTarget("ReturnFromMiddleGoal", false);
-  profileController->waitUntilSettled();
-
-
-	// Lower front arm to ground position.
-	//frontGoalHeight = 3;
-	//frontArm->setTarget(frontHeights[frontGoalHeight]);
+	hk_autonomous();
 }
 
 /**
@@ -212,16 +75,7 @@ void autonomous() {
  */
 
 void opcontrol() {
-	// Ensure that we keep the same state we had in auton
-	// For some reason motors the motors disengaged when switching to auton.
-	// No idea why, but I don't have time to find out why right now
-	clawHold = 1;
-	backGoalHeight = 0;
-	clawCtl->setTarget(CLAW_HOLD_TARGET);
-	backArm->setTarget(backHeights[backGoalHeight]);
-
-	pros::lcd::set_text(0, "Op-Control");
-	pros::Controller *ctrl = robo->getController();
+	hk_opcontrol_init();
 
 	ArduinoEncoder enc1 = arduino_encoder_create(0);
 	ArduinoEncoder enc2 = arduino_encoder_create(1);
@@ -232,20 +86,7 @@ void opcontrol() {
 
 	ControllerButton btnTestAuton(ControllerDigital::A);
 
-	ControllerButton btnFrontUp(ControllerDigital::R1);
-	ControllerButton btnFrontDown(ControllerDigital::R2);
-	ControllerButton btnBackUp(ControllerDigital::L1);
-	ControllerButton btnBackDown(ControllerDigital::L2);
-	ControllerButton btnClawHold(ControllerDigital::X);
-	ControllerButton btnClawRelease(ControllerDigital::Y);
-
 	while (1) {
-
-#if DRIVE_MODE == TANK
-	  robo->tankDrive();
-#else
-	  robo->arcadeDrive();
-#endif
 
 #ifdef USE_INTEGRATED_ENCODERS
 		pros::lcd::set_text(1, "Using Integrated Encoders");
@@ -259,35 +100,7 @@ void opcontrol() {
 #endif
 #endif
 
-		//front arm
-		if (btnFrontDown.changedToPressed() && frontGoalHeight < NUM_FRONT_HEIGHTS - 1) {
-      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-      frontGoalHeight++;
-			frontArm->setMaxVelocity(5000);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
-    } else if (btnFrontUp.changedToPressed() && frontGoalHeight > 0) {
-      frontGoalHeight--;
-			frontArm->setMaxVelocity(50);
-      frontArm->setTarget(frontHeights[frontGoalHeight]);
-    }
-
-		// back
-		if (btnBackDown.changedToPressed() && backGoalHeight < NUM_BACK_HEIGHTS - 1) {
-      // If the goal height is not at maximum and the up button is pressed, increase the setpoint
-      backGoalHeight++;
-      backArm->setTarget(backHeights[backGoalHeight]);
-    } else if (btnBackUp.changedToPressed() && backGoalHeight > 0) {
-      backGoalHeight--;
-      backArm->setTarget(backHeights[backGoalHeight]);
-    }
-
-		if (btnClawHold.changedToPressed() && !clawHold) {
-			clawHold = 1;
-			clawCtl->setTarget(CLAW_HOLD_TARGET);
-		} else if (btnClawRelease.changedToPressed() && clawHold) {
-			clawHold = 0;
-			clawCtl->setTarget(CLAW_RELEASED_TARGET);
-		}
+		hk_opcontrol_update();
 
 		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
 			autonomous();
@@ -297,27 +110,3 @@ void opcontrol() {
 		pros::delay(20);
 	}
 }
-
-
-//Random commented out code in case we'd like to reference anything:
-
-
-//open/close claw based on left triggers
-// if (master.get_digital(DIGITAL_L1)) {
-//   claw.move_velocity(100);
-// }
-// else if (master.get_digital(DIGITAL_L2)) {
-//   claw.move_velocity(-100);
-// }
-// else {
-//   claw.move_velocity(0);
-// }
-//toggle pistons with touch button
-// if (touch_button.get_value()) {
-// 	piston_1.set_value(true);
-// 	piston_2.set_value(true);
-// }
-// else {
-// 	piston_1.set_value(false);
-// 	piston_2.set_value(false);
-// }

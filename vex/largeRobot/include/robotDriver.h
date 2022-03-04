@@ -1,3 +1,6 @@
+#ifndef ROBOT_DRIVER_H
+#define ROBOT_DRIVER_H
+
 #include "api.h"
 #include "okapi/api.hpp"
 #include "okapi/impl/device/motor/motorGroup.hpp"
@@ -23,3 +26,5 @@ public:
   void tankDrive();
   void arcadeDrive();
 };
+
+#endif

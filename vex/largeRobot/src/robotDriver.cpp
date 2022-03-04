@@ -4,12 +4,15 @@
 
 // class
 RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, int8_t backLeftMotorPort, int8_t backRightMotorPort)
- : frontLeftMotor(frontLeftMotorPort), frontRightMotor(frontRightMotorPort), backLeftMotor(backLeftMotorPort), backRightMotor(backRightMotorPort),
+ : frontLeftMotor(abs(frontLeftMotorPort), frontLeftMotorPort < 0),
+   frontRightMotor(abs(frontRightMotorPort), frontRightMotorPort < 0),
+   backLeftMotor(abs(backLeftMotorPort), backLeftMotorPort < 0),
+   backRightMotor(abs(backRightMotorPort), backRightMotorPort < 0),
  controller(pros::E_CONTROLLER_MASTER)
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
-  .withMotors({frontLeftMotorPort, backLeftMotorPort}, {(int8_t)-frontRightMotorPort, (int8_t)-backRightMotorPort})
+  .withMotors({frontLeftMotorPort, backLeftMotorPort}, {frontRightMotorPort, backRightMotorPort})
 #ifndef USE_INTEGRATED_ENCODERS
 #ifndef ARDUINO_MIDDLE_ENCODER
   .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
@@ -27,7 +30,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
 
 void RobotDriver::tankDrive() {
   int left = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-  int right = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
+  int right = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
   this->frontLeftMotor = left;
   this->backLeftMotor = left;
   this->frontRightMotor = right;
@@ -36,9 +39,9 @@ void RobotDriver::tankDrive() {
 
 void RobotDriver::arcadeDrive() {
   int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-  int horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-  this->frontLeftMotor = horizontal - vertical;
-  this->backLeftMotor = horizontal - vertical;
+  int horizontal = -this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+  this->frontLeftMotor = -(horizontal - vertical);
+  this->backLeftMotor = -(horizontal - vertical);
   this->frontRightMotor = vertical + horizontal;
   this->backRightMotor = vertical + horizontal;
 }
