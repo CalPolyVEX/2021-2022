@@ -52,39 +52,18 @@ void at_autonomous() {
 	at_clawDeployMotor.waitUntilSettled();
 	at_frontIntake.move_voltage(6000);
 
+	at_drivetrain->chassis->moveDistance(12_in);
+
+	for (int i = 0; i < 100; i++) {
+		at_drivetrain->chassis->moveDistance(3_in);
+		at_drivetrain->chassis->moveDistance(-3_in);
+	}
+
+	/*
 	at_drivetrain->chassis->turnAngle(100_deg);
 	at_drivetrain->chassis->moveDistance(11_in);
 	at_drivetrain->chassis->turnAngle(105_deg);
 	at_drivetrain->chassis->setMaxVelocity(25);
 	at_drivetrain->chassis->moveDistance(36_in);
-	at_drivetrain->chassis->setMaxVelocity(1000);
-
-	/*// Claw in released position
-	// Lower back arm to ground position.
-  hk_backArm->stepTo(3, 5000);
-
-  profileController->waitUntilSettled();
-	hk_backArm->waitUntilSettled();
-
-	// Back arm is now lowered, hold the goal in the claw.
-	hk_clamp->extend();
-
-	// This seems to not deadlock, even though it clamps down hard on the goal.
-	hk_clamp->waitUntilSettled();
-
-	// Raise back arm to raised position.
-  hk_backArm->stepTo(2, 5000);
-
-	// Start moving without waiting.
-	profileController->generatePath({
-        {0_in, 0_in, 0_deg},
-        {-60_in, 0_ft, 0_deg}},
-        "ReturnFromMiddleGoal" // Profile name
-  );
-
-	// flip this boolean to move backwards instead of forwards
-	// apparently the underlying pathfinder library can't generate
-	// negative velocities / backwards paths, so this is the workaround.
-	profileController->setTarget("ReturnFromMiddleGoal", false);
-  profileController->waitUntilSettled();*/
+	at_drivetrain->chassis->setMaxVelocity(1000);*/
 }
