@@ -17,16 +17,16 @@ void hk_opcontrol_init() {
 }
 
 void hk_opcontrol_update() {
-  pros::lcd::set_text(1, "BackLeft: " + std::to_string(hk_drivetrain->backLeftMotor.getTemperature()) + "*C | BackRight: " + std::to_string(hk_drivetrain->backRightMotor.getTemperature()) + "*C");
-  pros::lcd::set_text(2, "FrontLeft: " + std::to_string(hk_drivetrain->frontLeftMotor.getTemperature()) + "*C");
-  pros::lcd::set_text(3, "FrontRight: " + std::to_string(hk_drivetrain->frontRightMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(1, "BackLeft: " + std::to_string((int) hk_drivetrain->backLeftMotor.getTemperature()) + "*C | BackRight: " + std::to_string((int) hk_drivetrain->backRightMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(2, "FrontLeft: " + std::to_string((int) hk_drivetrain->frontLeftMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(3, "FrontRight: " + std::to_string((int) hk_drivetrain->frontRightMotor.getTemperature()) + "*C");
   pros::lcd::set_text(4, "FrontLever; Left: " +
-      std::to_string(pros::c::motor_get_temperature(15))
-      + "*C Right: " + std::to_string(pros::c::motor_get_temperature(16)) + "*C");
+      std::to_string((int) pros::c::motor_get_temperature(15))
+      + "*C Right: " + std::to_string((int) pros::c::motor_get_temperature(16)) + "*C");
   pros::lcd::set_text(5, "BackArm; Left: " +
-      std::to_string(pros::c::motor_get_temperature(12))
-      + "*C Right: " + std::to_string(pros::c::motor_get_temperature(13)) + "*C");
-  pros::lcd::set_text(6, "Clamp Port: " + std::to_string(pros::c::motor_get_temperature(19)) + "*C");
+      std::to_string((int) pros::c::motor_get_temperature(12))
+      + "*C Right: " + std::to_string((int) pros::c::motor_get_temperature(13)) + "*C");
+  pros::lcd::set_text(6, "Clamp Port: " + std::to_string((int) pros::c::motor_get_temperature(19)) + "*C");
 
   hk_drivetrain->tankDrive();
 
