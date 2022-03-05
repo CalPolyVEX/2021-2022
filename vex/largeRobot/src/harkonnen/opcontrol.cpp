@@ -13,7 +13,7 @@ void hk_opcontrol_init() {
   hk_clamp->engage();
   hk_backArm->engage();
 
-  pros::c::motor_set_brake_mode(MIDDLE_WACKO_WHEEL_PORT, pros::E_MOTOR_BRAKE_BRAKE);
+  pros::c::motor_set_brake_mode(MIDDLE_WACKO_WHEEL_PORT, pros::E_MOTOR_BRAKE_COAST);
 }
 
 void hk_opcontrol_update() {

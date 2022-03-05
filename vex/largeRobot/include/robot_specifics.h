@@ -7,8 +7,8 @@
 // ---
 
 // Change the lines here based on what robot we're compiling for.
-#define SMALL_ROBOT_ATREIDES
-//#define LARGE_ROBOT_HARKONNEN
+//#define SMALL_ROBOT_ATREIDES
+#define LARGE_ROBOT_HARKONNEN
 
 // Average radius of the two different wheel types.
 // The small and big robot both use the same values, for now.

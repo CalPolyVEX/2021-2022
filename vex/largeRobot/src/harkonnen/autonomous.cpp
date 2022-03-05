@@ -36,9 +36,8 @@ void hk_autonomous() {
 
 	profileController->setTarget("MoveToMiddleGoal", true);
 
-	// Claw in released position
-	// Lower back arm to ground position.
-  hk_backArm->stepTo(3, 5000);
+	// Ensure back arm is in ground position
+  hk_backArm->stepTo(0, 5000);
 
   profileController->waitUntilSettled();
 	hk_backArm->waitUntilSettled();
