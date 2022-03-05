@@ -30,7 +30,7 @@ SteppedMotor* at_backClawArm = new SteppedMotor (
 
 SteppedMotor at_clawDeployMotor(
   {16},
-  {0, -500, -2500});
+  {0, -50, -2500});
 
 // Device: Claw Close Piston
 

@@ -52,11 +52,13 @@ void at_autonomous() {
 	at_clawDeployMotor.waitUntilSettled();
 	at_frontIntake.move_voltage(6000);
 
-	at_drivetrain->chassis->moveDistance(12_in);
+	at_drivetrain->chassis->moveDistance(18_in);
 
 	for (int i = 0; i < 100; i++) {
-		at_drivetrain->chassis->moveDistance(3_in);
-		at_drivetrain->chassis->moveDistance(-3_in);
+		at_drivetrain->chassis->moveDistance(-8_in);
+		pros::delay(5);
+		at_drivetrain->chassis->moveDistance(8_in);
+		pros::delay(5);
 	}
 
 	/*
