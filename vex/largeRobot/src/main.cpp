@@ -105,6 +105,7 @@ void opcontrol() {
 
 	while (1) {
 
+/*
 #ifdef USE_INTEGRATED_ENCODERS
 		pros::lcd::set_text(1, "Using Integrated Encoders");
 		pros::lcd::set_text(2, "Arduino encoders disabled in-code");
@@ -116,6 +117,7 @@ void opcontrol() {
 		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(enc3.get()));
 #endif
 #endif
+*/
 
 #ifdef LARGE_ROBOT_HARKONNEN
 		hk_opcontrol_update();

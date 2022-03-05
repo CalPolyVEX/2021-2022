@@ -17,6 +17,16 @@ void at_opcontrol_init() {
 }
 
 void at_opcontrol_update() {
+
+  pros::lcd::set_text(1, "BackLeft: " + std::to_string(at_drivetrain->backLeftMotor.getTemperature()) + "*C | BackRight: " + std::to_string(at_drivetrain->backRightMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(2, "FrontLeft: " + std::to_string(at_drivetrain->frontLeftMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(3, "FrontRight: " + std::to_string(at_drivetrain->frontRightMotor.getTemperature()) + "*C");
+  pros::lcd::set_text(4, "BackArmLeft: " + std::to_string(pros::c::motor_get_temperature(5)) + "*C");
+  pros::lcd::set_text(5, "BackArmRight: " + std::to_string(pros::c::motor_get_temperature(6)) + "*C");
+  pros::lcd::set_text(6, "Intake: " + std::to_string(pros::c::motor_get_temperature(4)) + "*C");
+  pros::lcd::set_text(7, "ClawDeploy: " + std::to_string(pros::c::motor_get_temperature(16)) + "*C");
+
+
   at_drivetrain->arcadeDrive();
 
   if (at_btnClawPos1.changedToPressed()) {
