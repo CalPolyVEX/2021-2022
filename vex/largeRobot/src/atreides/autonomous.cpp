@@ -52,14 +52,27 @@ void at_autonomous() {
 	at_clawDeployMotor.waitUntilSettled();
 	at_frontIntake.move_voltage(6000);
 
-	at_drivetrain->chassis->moveDistance(18_in);
+	at_drivetrain->chassis->moveDistance(10_in);
 
-	for (int i = 0; i < 100; i++) {
-		at_drivetrain->chassis->moveDistance(-8_in);
-		pros::delay(5);
+	for (int i = 0; i < 15; i++) {
 		at_drivetrain->chassis->moveDistance(8_in);
 		pros::delay(5);
+		at_drivetrain->chassis->moveDistance(-8_in);
+		pros::delay(5);
 	}
+
+	// Deploy claw from reset position to capture/release position
+	at_clawDeployMotor.stepTo(2, 150);
+	at_clawDeployMotor.waitUntilSettled();
+
+	// Retract the piston at the end
+	at_clawClosePiston.set_value(0);
+
+	// Wait for piston to close
+	pros::delay(400);
+
+	// Drive away so we don't touch the goal.
+	at_drivetrain->chassis->moveDistance(8_in);
 
 	/*
 	at_drivetrain->chassis->turnAngle(100_deg);

@@ -3,6 +3,8 @@
 void hk_autonomous() {
 	pros::lcd::set_text(0, "Harkonnen Autonomous");
 
+	pros::c::motor_set_brake_mode(MIDDLE_WACKO_WHEEL_PORT, pros::E_MOTOR_BRAKE_COAST);
+
 	#ifdef AUTONOMOUS_ONLY_DRIVE_FORWARD
 		hk_drivetrain->chassis->setMaxVelocity(100000);
 		hk_drivetrain->chassis->moveDistance(1000_m);

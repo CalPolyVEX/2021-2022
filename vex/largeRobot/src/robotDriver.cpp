@@ -1,5 +1,9 @@
 // include
 #include "robotDriver.h"
+
+#ifdef LARGE_ROBOT_HARKONNEN
+#include "harkonnen/harkonnen.h"
+#endif
 // define
 
 // class
@@ -12,7 +16,7 @@ RobotDriver::RobotDriver(int8_t frontLeftMotorPort, int8_t frontRightMotorPort, 
 {
   //use okapi chasis for drive PID
   chassis = okapi::ChassisControllerBuilder()
-  .withMotors({-3, -2}, {15, 17})
+  .withMotors({frontLeftMotorPort, backLeftMotor}, {frontRightMotor, backRightMotor})
 #ifndef USE_INTEGRATED_ENCODERS
 #ifndef ARDUINO_MIDDLE_ENCODER
   .withSensors(std::make_shared<ArduinoEncoder>(arduino_encoder_create(ARDUINO_LEFT_ENCODER)),
@@ -35,6 +39,10 @@ void RobotDriver::tankDrive() {
   this->backLeftMotor = left;
   this->frontRightMotor = right;
   this->backRightMotor = right;
+
+  #ifdef LARGE_ROBOT_HARKONNEN
+  pros::c::motor_move(MIDDLE_WACKO_WHEEL_PORT, (left + right) / 2);
+  #endif
 }
 
 void RobotDriver::arcadeDrive() {

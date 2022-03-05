@@ -6,6 +6,8 @@
 #include "../steppedMotor.h"
 #include "robotDriver.h"
 
+extern const int8_t MIDDLE_WACKO_WHEEL_PORT;
+
 extern RobotDriver *hk_drivetrain;
 extern SteppedMotor *hk_frontLever;
 extern SteppedMotor *hk_backArm;

@@ -10,6 +10,8 @@ const int8_t LEFT_WHEELS_2_PORT = -4;
 const int8_t RIGHT_WHEELS_1_PORT = 2;
 const int8_t RIGHT_WHEELS_2_PORT = 5;
 
+const int8_t MIDDLE_WACKO_WHEEL_PORT = 9;
+
 RobotDriver* hk_drivetrain = new RobotDriver(
   LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
 

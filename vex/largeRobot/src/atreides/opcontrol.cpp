@@ -9,9 +9,12 @@ ControllerButton at_btnIntake1(ControllerDigital::R1);
 ControllerButton at_btnIntake2(ControllerDigital::R2);
 
 bool intakeRunning = false;
+uint32_t startMillis;
 
 void at_opcontrol_init() {
   pros::lcd::set_text(0, "Atreides Op-Control");
+
+  startMillis = pros::millis();
 
   // For some reason, motors disengage when switching to opcontrol.
   // Use this as a chance to re-engage them.
@@ -55,5 +58,18 @@ void at_opcontrol_update() {
     } else {
       at_frontIntake.move_voltage(0);
     }
+  }
+
+  uint32_t currentMillis = pros::millis();
+
+  if (currentMillis - startMillis > 73000) {
+    // Last two seconds (endgame)
+
+    // Deploy claw from reset position to capture/release position
+  	at_clawDeployMotor.stepTo(2, 150);
+  	at_clawDeployMotor.waitUntilSettled();
+
+  	// Retract the piston at the end
+  	at_clawClosePiston.set_value(0);
   }
 }

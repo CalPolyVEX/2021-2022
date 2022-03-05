@@ -12,6 +12,8 @@ void hk_opcontrol_init() {
   // For some reason, motors disengage when switching to opcontrol.
   hk_clamp->engage();
   hk_backArm->engage();
+
+  pros::c::motor_set_brake_mode(MIDDLE_WACKO_WHEEL_PORT, pros::E_MOTOR_BRAKE_BRAKE);
 }
 
 void hk_opcontrol_update() {
