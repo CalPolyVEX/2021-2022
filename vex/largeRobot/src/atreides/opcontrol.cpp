@@ -1,11 +1,12 @@
 #include "atreides.h"
 
-ControllerButton at_btnResetPos(ControllerDigital::B);
+ControllerButton at_btnResetPos(ControllerDigital::X);
 ControllerButton at_btnClawPos1(ControllerDigital::A);
 ControllerButton at_btnArmDown(ControllerDigital::L1);
 ControllerButton at_btnArmUp(ControllerDigital::L2);
-ControllerButton at_btnClaw(ControllerDigital::X);
-ControllerButton at_btnIntake(ControllerDigital::Y);
+ControllerButton at_btnClaw(ControllerDigital::B);
+ControllerButton at_btnIntake1(ControllerDigital::R1);
+ControllerButton at_btnIntake2(ControllerDigital::R2);
 
 bool intakeRunning = false;
 
@@ -46,11 +47,11 @@ void at_opcontrol_update() {
 		at_clawClosePiston.set_value(at_clawClosed);
 	}
 
-  if (at_btnIntake.changedToPressed()) {
+  if (at_btnIntake1.changedToPressed() || at_btnIntake2.changedToPressed()) {
     intakeRunning = !intakeRunning;
 
     if (intakeRunning) {
-      at_frontIntake.move_voltage(6000);
+      at_frontIntake.move_voltage(10000);
     } else {
       at_frontIntake.move_voltage(0);
     }
