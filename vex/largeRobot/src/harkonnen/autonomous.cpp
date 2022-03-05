@@ -63,4 +63,10 @@ void hk_autonomous() {
 	// negative velocities / backwards paths, so this is the workaround.
 	profileController->setTarget("ReturnFromMiddleGoal", false);
   profileController->waitUntilSettled();
+
+	// Return back arm to ground position
+	// Since motors disengage when switching from opcontrol to auton,
+	// we need to make sure we don't lose the goal.
+  hk_backArm->stepTo(0, 5000);
+	hk_backArm->waitUntilSettled();
 }
