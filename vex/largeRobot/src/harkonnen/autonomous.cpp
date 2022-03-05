@@ -42,6 +42,9 @@ void hk_autonomous() {
   profileController->waitUntilSettled();
 	hk_backArm->waitUntilSettled();
 
+	// Wait until the goal stabilizes
+	pros::delay(500);
+
 	// Back arm is now lowered, hold the goal in the claw.
 	hk_clamp->extend();
 
