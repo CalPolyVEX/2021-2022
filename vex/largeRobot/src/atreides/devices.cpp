@@ -21,6 +21,12 @@ pros::Motor at_frontIntake(4);
 #define BACK_ARM_LEFT_PORT 5
 #define BACK_ARM_RIGHT_PORT 6
 
+pros::Motor Arm1(5);
+pros::Motor Arm2(6);
+
+// pros::Motor at_backArm1(5);
+// pros::Motor at_backArm2(6);
+
 SteppedMotor* at_backClawArm = new SteppedMotor (
   {BACK_ARM_LEFT_PORT, -BACK_ARM_RIGHT_PORT},
   {0, -2000, -4000, -8000},
@@ -30,7 +36,7 @@ SteppedMotor* at_backClawArm = new SteppedMotor (
 
 SteppedMotor at_clawDeployMotor(
   {16},
-  {0, -50, -2500});
+  {0, -500, -2500}); //greater negative number for outward position
 
 // Device: Claw Close Piston
 

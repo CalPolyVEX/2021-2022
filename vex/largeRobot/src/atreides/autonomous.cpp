@@ -43,7 +43,7 @@ void at_autonomous() {
 	pros::delay(400);
 
 	// Retract claw into scoring position
-	at_clawDeployMotor.stepTo(1, 75);
+	at_clawDeployMotor.stepTo(1, 150);
 
 	// While that's happening, start moving towards the rings, and then grab then
 
@@ -52,9 +52,9 @@ void at_autonomous() {
 	at_clawDeployMotor.waitUntilSettled();
 	at_frontIntake.move_voltage(6000);
 
-	at_drivetrain->chassis->moveDistance(10_in);
+	at_drivetrain->chassis->moveDistance(14_in);
 
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 10; i++) {
 		at_drivetrain->chassis->moveDistance(8_in);
 		pros::delay(5);
 		at_drivetrain->chassis->moveDistance(-8_in);
