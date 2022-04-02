@@ -12,6 +12,9 @@ const int8_t RIGHT_WHEELS_2_PORT = 15;
 RobotDriver* at_drivetrain = new RobotDriver(
   LEFT_WHEELS_1_PORT, RIGHT_WHEELS_1_PORT, LEFT_WHEELS_2_PORT, RIGHT_WHEELS_2_PORT);
 
+CPRobotBuilder = new CPRobotDriverBuilder();
+CPRobotDriver testDriver = CPRobotDriverBuilder.WithMotors()
+
 // Device: Front Intake
 
 pros::Motor at_frontIntake(4);

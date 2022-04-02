@@ -5,6 +5,7 @@
 #include "okapi/api.hpp"
 #include "../steppedMotor.h"
 #include "robotDriver.h"
+#include "CPRobotDriver.hpp"
 
 extern RobotDriver* at_drivetrain;
 extern pros::Motor at_frontIntake;
