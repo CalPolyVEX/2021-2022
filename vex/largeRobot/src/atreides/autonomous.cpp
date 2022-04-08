@@ -1,3 +1,5 @@
+//autonomous code has been commented out for demos to prevent accidental autonomous activation
+/*
 #include "atreides.h"
 
 void at_autonomous() {
@@ -82,3 +84,4 @@ void at_autonomous() {
 	at_drivetrain->chassis->moveDistance(36_in);
 	at_drivetrain->chassis->setMaxVelocity(1000);*/
 }
+*/
