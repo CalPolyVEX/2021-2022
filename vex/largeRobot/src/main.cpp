@@ -65,7 +65,7 @@ void autonomous() {
 #ifdef LARGE_ROBOT_HARKONNEN
 	hk_autonomous();
 #else
-	at_autonomous();
+	// at_autonomous();
 #endif
 }
 
