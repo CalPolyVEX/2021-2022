@@ -1,15 +1,6 @@
 #include "main.h"
-#include "robotDriver.h"
-#include "arduinoSensors.hpp"
-#include "robot_specifics.h"
-
-#ifdef LARGE_ROBOT_HARKONNEN
-#include "harkonnen/harkonnen.h"
-#else
-#include "atreides/atreides.h"
-#endif
-
-int ALLOW_TEST_AUTON = 1;
+#include "CPRobotDriver.hpp"
+// #include "arduinoSensors.hpp"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -18,10 +9,8 @@ int ALLOW_TEST_AUTON = 1;
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	arduino_sensors_setup();
-
+	// arduino_sensors_setup();
 	pros::lcd::initialize();
-
 	pros::lcd::set_text(0, "Robot Initialized");
 }
 
@@ -45,8 +34,6 @@ void disabled() {
  */
 void competition_initialize() {
 	pros::lcd::set_text(0, "Competition Initialized");
-
-	ALLOW_TEST_AUTON = 0;
 }
 
 /**
@@ -62,11 +49,7 @@ void competition_initialize() {
  */
 
 void autonomous() {
-#ifdef LARGE_ROBOT_HARKONNEN
-	hk_autonomous();
-#else
-	at_autonomous();
-#endif
+	pros::lcd::set_text(0, "Autonomous");
 }
 
 /**
@@ -84,51 +67,31 @@ void autonomous() {
  */
 
 void opcontrol() {
-#ifdef LARGE_ROBOT_HARKONNEN
-	hk_opcontrol_init();
-#else
-	at_opcontrol_init();
-#endif
+	pros::lcd::set_text(0, "Op Control");
 
-	ArduinoEncoder enc1 = arduino_encoder_create(0);
-	ArduinoEncoder enc2 = arduino_encoder_create(1);
+	// CPRobotMotor single(-2);
+	// CPRobotMotor l1(-2);
+	// CPRobotMotor l2(-3);
+	// CPRobotMotor r1(15);
+	// CPRobotMotor r2(17);
+	// CPRobotMotorSet left({ l1, l2 });
+	// CPRobotMotorSet right({ r1, r2 });
+	// CPRobotDriver robo(left, right);
 
-#ifdef HAS_MIDDLE_ENCODER
-	ArduinoEncoder enc3 = arduino_encoder_create(2);
-#endif
+	  // l1.setSpeed(80);
+	  // l2.setSpeed(20);
+	  // r1.setSpeed(20);
+	  // r2.setSpeed(20);
 
-#ifdef SMALL_ROBOT_ATREIDES
-	ControllerButton btnTestAuton(ControllerDigital::Y);
-#else
-	ControllerButton btnTestAuton(ControllerDigital::A);
-#endif
+	CPRobotMotorSet left({-2, -3});
+	CPRobotMotorSet right({15, 17});
+
+	CPRobotDriver robot(left, right, Tank);
+
+	robot.setSpeed(40);
 
 	while (1) {
-
-/*
-#ifdef USE_INTEGRATED_ENCODERS
-		pros::lcd::set_text(1, "Using Integrated Encoders");
-		pros::lcd::set_text(2, "Arduino encoders disabled in-code");
-#else
-		pros::lcd::set_text(1, "Encoder 1 Val: " + std::to_string(enc1.get()));
-		pros::lcd::set_text(2, "Encoder 2 Val: " + std::to_string(enc2.get()));
-
-#ifdef HAS_MIDDLE_ENCODER
-		pros::lcd::set_text(3, "Encoder 3 Val: " + std::to_string(enc3.get()));
-#endif
-#endif
-*/
-
-#ifdef LARGE_ROBOT_HARKONNEN
-		hk_opcontrol_update();
-#else
-		at_opcontrol_update();
-#endif
-
-		if (btnTestAuton.changedToPressed() && ALLOW_TEST_AUTON) {
-			autonomous();
-		}
-
+		robot.controlCycle();
 		// Required to avoid us taking up too much time from other tasks.
 		pros::delay(20);
 	}
