@@ -6,12 +6,14 @@
  * CP ROBOT DRIVER
  *
  */
-CPRobotDriver::CPRobotDriver(CPRobotMotorSet &left, CPRobotMotorSet &right, DriveMode mode) : controller(pros::E_CONTROLLER_MASTER) {
+CPRobotDriver::CPRobotDriver(CPRobotMotorSet &left, CPRobotMotorSet &right, DriveMode mode, std::vector<CPRobotControllerBind *> cb) : controller(pros::E_CONTROLLER_MASTER) {
   this->leftMotorSet = &left;
   this->rightMotorSet = &right;
   this->driveMode = mode;
+  for (CPRobotControllerBind *controllerBind : cb) {
+    this->controllerBinds.push_back(controllerBind);
+  }
 }
-
 void CPRobotDriver::setSpeed(int speed) {
   if (this->leftMotorSet != NULL) {
     this->leftMotorSet->setSpeed(speed);
@@ -20,7 +22,6 @@ void CPRobotDriver::setSpeed(int speed) {
     this->rightMotorSet->setSpeed(speed);
   }
 }
-
 void CPRobotDriver::controlCycle() {
   switch(this->driveMode) {
     case Tank:
@@ -28,11 +29,14 @@ void CPRobotDriver::controlCycle() {
       this->rightMotorSet->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
       break;
     case Arcade:
-      int32_t vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-      int32_t horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-      this->leftMotorSet->setSpeed((vertical + horizontal) / 127);
-      this->rightMotorSet->setSpeed((vertical - horizontal) / 127);
+      int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+      int horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+      this->leftMotorSet->setSpeed((vertical + horizontal));
+      this->rightMotorSet->setSpeed((vertical - horizontal));
       break;
+  }
+  for (CPRobotControllerBind *cb : this->controllerBinds) {
+    cb->controlCycle(this->controller);
   }
 }
 
@@ -49,6 +53,9 @@ int CPRobotMotor::getPort() { return this->port; }
 int CPRobotMotor::getDirection() { return this->dir; }
 void CPRobotMotor::setSpeed(int speed) {
   this->motor.move(speed);
+}
+void CPRobotMotor::moveTo(int position, int speed) {
+  this->motor.move_absolute((double)position, speed);
 }
 
 /**
@@ -70,9 +77,77 @@ std::string CPRobotMotorSet::listMotors() {
   }
   return str;
 }
-
 void CPRobotMotorSet::setSpeed(int speed) {
   for (CPRobotMotor motor : this->motors) {
     motor.setSpeed(speed);
+  }
+}
+void CPRobotMotorSet::moveTo(int position, int speed) {
+  for (CPRobotMotor motor : this->motors) {
+    motor.moveTo(position, speed);
+  }
+}
+
+/**
+ *
+ * CP ROBOT MOTOR CONTROLLER BIND
+ *
+ */
+CPRobotControllerBind::CPRobotControllerBind(CPRobotMotorSet *m, pros::controller_digital_e_t bp, pros::controller_digital_e_t bs, int i, std::vector<int> p, enum BindMode bm) {
+  this->motorSet = m;
+  this->buttonPrimary = bp;
+  this->buttonSecondary = bs;
+  this->positionIndex = 0;
+  this->numPositions = 0;
+  this->releasedButtonPrimary = true;
+  this->bindMode = bm;
+  this->speed = 127;
+  for (int pos : p) {
+    this->positions.push_back(pos);
+    this->numPositions ++;
+  }
+  this->motorSet->moveTo(i, 127);
+}
+void CPRobotControllerBind::controlCycle(pros::Controller controller) {
+  bool pressedPrimary = controller.get_digital(this->buttonPrimary);
+  bool pressedSecondary = (this->buttonSecondary ? controller.get_digital(this->buttonSecondary) : false);
+  switch(this->bindMode) {
+    case Toggle:
+      this->controlCycleToggle(pressedPrimary);
+      break;
+    case Hold:
+      this->controlCycleHold(pressedPrimary, pressedSecondary);
+      break;
+    case Step:
+      this->controlCycleStep(pressedPrimary, pressedSecondary);
+      break;
+  }
+  this->releasedButtonPrimary = !pressedPrimary;
+  this->releasedButtonSecondary = !pressedSecondary;
+}
+void CPRobotControllerBind::controlCycleStep(bool pressedPrimary, bool pressedSecondary) {
+  if (pressedPrimary && this->releasedButtonPrimary) {
+    this->positionIndex ++;
+    if (this->positionIndex >= this->numPositions) this->positionIndex = 0;
+    this->motorSet->moveTo(this->positions.at(this->positionIndex), this->speed);
+  } else if (pressedSecondary && this->releasedButtonSecondary) {
+    this->positionIndex --;
+    if (this->positionIndex < 0) this->positionIndex = this->numPositions - 1;
+    this->motorSet->moveTo(this->positions.at(this->positionIndex), this->speed);
+  }
+}
+void CPRobotControllerBind::controlCycleHold(bool pressedPrimary, bool pressedSecondary) {
+  if (pressedPrimary) {
+    this->motorSet->setSpeed(this->speed);
+  } else if (pressedSecondary) {
+    this->motorSet->setSpeed(-this->speed);
+  } else {
+    this->motorSet->setSpeed(0);
+  }
+}
+void CPRobotControllerBind::controlCycleToggle(bool pressedPrimary) {
+  if (pressedPrimary && this->releasedButtonPrimary) {
+    this->positionIndex = 1 - this->positionIndex;
+    this->motorSet->setSpeed(this->speed * this->positionIndex);
   }
 }

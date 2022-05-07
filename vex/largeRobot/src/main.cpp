@@ -85,8 +85,15 @@ void opcontrol() {
 
 	CPRobotMotorSet left({-2, -3});
 	CPRobotMotorSet right({15, 17});
+	CPRobotMotorSet lever({4});
+	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 200, 600}, Step);
+	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
+	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
 
-	CPRobotDriver robot(left, right, Tank);
+	std::vector<CPRobotControllerBind *> binds({&leverBind});
+
+
+	CPRobotDriver robot(left, right, Arcade, binds);
 
 	robot.setSpeed(40);
 
