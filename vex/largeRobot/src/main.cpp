@@ -15,7 +15,7 @@ void initialize() {
 	CPRobotMotorSet left({motors.get(2), motors.get(3)});
 	CPRobotMotorSet right({motors.get(15), motors.get(17)});
 	CPRobotMotorSet lever({motors.get(4)});
-	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 200, 600}, Step);
+	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
 	std::vector<CPRobotMotorSet *> driveMotors({&left, &right});
@@ -82,6 +82,7 @@ void opcontrol() {
 	pros::lcd::set_text(0, "Op Control");
 
 	while (1) {
+		//Executes the drive code, and any controller binds
 		robot->controlCycle();
 		// Required to avoid us taking up too much time from other tasks.
 		pros::delay(20);

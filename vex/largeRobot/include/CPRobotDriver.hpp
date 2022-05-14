@@ -4,7 +4,7 @@
 #include <vector>
 // #include "arduinoSensors.hpp"
 
-enum DriveMode { TankTank, TankArcade, XDrive };
+enum DriveMode { Tank, TankArcade, XDrive };
 enum BindMode { Toggle, Step, Hold };
 
 class CPRobotMotor {
@@ -68,6 +68,7 @@ public:
   CPRobotDriver(std::vector<CPRobotMotorSet *> driveMotors, DriveMode mode, std::vector<CPRobotControllerBind *> cb);
   void setSpeed(int speed);
   void controlCycle();
+  pros::Controller getController();
 };
 
 

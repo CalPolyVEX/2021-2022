@@ -25,7 +25,7 @@ void CPRobotDriver::setSpeed(int speed) {
 }
 void CPRobotDriver::controlCycle() {
   switch(this->driveMode) {
-    case TankTank: {
+    case Tank: {
       this->driveMotors[0]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
       this->driveMotors[1]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
       break;
@@ -51,6 +51,9 @@ void CPRobotDriver::controlCycle() {
   for (CPRobotControllerBind *cb : this->controllerBinds) {
     cb->controlCycle(this->controller);
   }
+}
+pros::Controller CPRobotDriver::getController() {
+  return controller;
 }
 
 /**
