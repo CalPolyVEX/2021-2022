@@ -3,6 +3,7 @@
 // #include "arduinoSensors.hpp"
 
 CPRobotDriver *robot = NULL;
+CPRobotMotorList *motors = NULL;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -11,10 +12,10 @@ CPRobotDriver *robot = NULL;
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	CPRobotMotorList motors({-2, -3, 4, 15, 17});
-	CPRobotMotorSet left({motors.get(2), motors.get(3)});
-	CPRobotMotorSet right({motors.get(15), motors.get(17)});
-	CPRobotMotorSet lever({motors.get(4)});
+	motors = new CPRobotMotorList({-2, -3, 4, 15, 17});
+	CPRobotMotorSet left({motors->get(2), motors->get(3)});
+	CPRobotMotorSet right({motors->get(15), motors->get(17)});
+	CPRobotMotorSet lever({motors->get(4)});
 	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
