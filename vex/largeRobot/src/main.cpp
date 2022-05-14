@@ -2,6 +2,8 @@
 #include "CPRobotDriver.hpp"
 // #include "arduinoSensors.hpp"
 
+CPRobotDriver *robot = NULL;
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -9,7 +11,17 @@
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	// arduino_sensors_setup();
+	CPRobotMotorList motors({-2, -3, 4, 15, 17});
+	CPRobotMotorSet left({motors.get(2), motors.get(3)});
+	CPRobotMotorSet right({motors.get(15), motors.get(17)});
+	CPRobotMotorSet lever({motors.get(4)});
+	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 200, 600}, Step);
+	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
+	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
+	std::vector<CPRobotMotorSet *> driveMotors({&left, &right});
+	std::vector<CPRobotControllerBind *> binds({&leverBind});
+	robot = new CPRobotDriver(driveMotors, TankArcade, binds);
+
 	pros::lcd::initialize();
 	pros::lcd::set_text(0, "Robot Initialized");
 }
@@ -69,36 +81,8 @@ void autonomous() {
 void opcontrol() {
 	pros::lcd::set_text(0, "Op Control");
 
-	// CPRobotMotor single(-2);
-	// CPRobotMotor l1(-2);
-	// CPRobotMotor l2(-3);
-	// CPRobotMotor r1(15);
-	// CPRobotMotor r2(17);
-	// CPRobotMotorSet left({ l1, l2 });
-	// CPRobotMotorSet right({ r1, r2 });
-	// CPRobotDriver robo(left, right);
-
-	  // l1.setSpeed(80);
-	  // l2.setSpeed(20);
-	  // r1.setSpeed(20);
-	  // r2.setSpeed(20);
-
-	CPRobotMotorSet left({-2, -3});
-	CPRobotMotorSet right({15, 17});
-	CPRobotMotorSet lever({4});
-	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 200, 600}, Step);
-	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
-	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
-
-	std::vector<CPRobotControllerBind *> binds({&leverBind});
-
-
-	CPRobotDriver robot(left, right, Arcade, binds);
-
-	robot.setSpeed(40);
-
 	while (1) {
-		robot.controlCycle();
+		robot->controlCycle();
 		// Required to avoid us taking up too much time from other tasks.
 		pros::delay(20);
 	}

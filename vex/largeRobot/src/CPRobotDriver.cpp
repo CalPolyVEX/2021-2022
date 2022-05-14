@@ -6,34 +6,47 @@
  * CP ROBOT DRIVER
  *
  */
-CPRobotDriver::CPRobotDriver(CPRobotMotorSet &left, CPRobotMotorSet &right, DriveMode mode, std::vector<CPRobotControllerBind *> cb) : controller(pros::E_CONTROLLER_MASTER) {
-  this->leftMotorSet = &left;
-  this->rightMotorSet = &right;
+CPRobotDriver::CPRobotDriver(std::vector<CPRobotMotorSet *> driveMotors, DriveMode mode, std::vector<CPRobotControllerBind *> cb) : controller(pros::E_CONTROLLER_MASTER) {
+  for (CPRobotMotorSet *motorSet : driveMotors) {
+    this->driveMotors.push_back(motorSet);
+  }
   this->driveMode = mode;
   for (CPRobotControllerBind *controllerBind : cb) {
     this->controllerBinds.push_back(controllerBind);
   }
 }
 void CPRobotDriver::setSpeed(int speed) {
-  if (this->leftMotorSet != NULL) {
-    this->leftMotorSet->setSpeed(speed);
+  if (this->driveMotors[0] != NULL) {
+    this->driveMotors[0]->setSpeed(speed);
   }
-  if (this->rightMotorSet != NULL) {
-    this->rightMotorSet->setSpeed(speed);
+  if (this->driveMotors[1] != NULL) {
+    this->driveMotors[1]->setSpeed(speed);
   }
 }
 void CPRobotDriver::controlCycle() {
   switch(this->driveMode) {
-    case Tank:
-      this->leftMotorSet->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      this->rightMotorSet->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+    case TankTank: {
+      this->driveMotors[0]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      this->driveMotors[1]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
       break;
-    case Arcade:
+    }
+    case TankArcade: {
       int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
       int horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-      this->leftMotorSet->setSpeed((vertical + horizontal));
-      this->rightMotorSet->setSpeed((vertical - horizontal));
+      this->driveMotors[0]->setSpeed((vertical + horizontal));
+      this->driveMotors[1]->setSpeed((vertical - horizontal));
       break;
+    }
+    case XDrive: {
+      int turn = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+      int h = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+      int v = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
+      this->driveMotors[0]->setSpeed(v + h + turn); //Front left (then clockwise, bird's eye view)
+      this->driveMotors[1]->setSpeed(-v + h + turn); //Front right
+      this->driveMotors[2]->setSpeed(-v - h + turn); //Back right
+      this->driveMotors[3]->setSpeed(v - h + turn); //Back left
+      break;
+    }
   }
   for (CPRobotControllerBind *cb : this->controllerBinds) {
     cb->controlCycle(this->controller);
@@ -63,29 +76,43 @@ void CPRobotMotor::moveTo(int position, int speed) {
  * CP ROBOT MOTOR SET
  *
  */
-CPRobotMotorSet::CPRobotMotorSet(std::initializer_list<int> ports) {
- for (int port : ports) {
-   this->motors.push_back(CPRobotMotor(port));
+CPRobotMotorSet::CPRobotMotorSet(std::initializer_list<CPRobotMotor *> newMotors) {
+ for (CPRobotMotor *motor : newMotors) {
+   this->motors.push_back(motor);
  }
 }
 std::string CPRobotMotorSet::listMotors() {
   std::string str = "";
-  for (CPRobotMotor motor : this->motors) {
-    str.append(std::to_string(motor.getPort()));
-    if (motor.getDirection() < 0) str.append(" (rev)");
+  for (CPRobotMotor *motor : this->motors) {
+    str.append(std::to_string(motor->getPort()));
+    if (motor->getDirection() < 0) str.append(" (rev)");
     str.append(", ");
   }
   return str;
 }
 void CPRobotMotorSet::setSpeed(int speed) {
-  for (CPRobotMotor motor : this->motors) {
-    motor.setSpeed(speed);
+  for (CPRobotMotor *motor : this->motors) {
+    motor->setSpeed(speed);
   }
 }
 void CPRobotMotorSet::moveTo(int position, int speed) {
-  for (CPRobotMotor motor : this->motors) {
-    motor.moveTo(position, speed);
+  for (CPRobotMotor *motor : this->motors) {
+    motor->moveTo(position, speed);
   }
+}
+
+/**
+ *
+ * CP ROBOT MOTOR LIST
+ *
+ */
+CPRobotMotorList::CPRobotMotorList(std::initializer_list<int> ports) {
+ for (int port : ports) {
+   this->motors.insert(std::make_pair(std::abs(port), CPRobotMotor(port)));
+ }
+}
+CPRobotMotor* CPRobotMotorList::get(int port) {
+  return &(this->motors.find(std::abs(port))->second);
 }
 
 /**

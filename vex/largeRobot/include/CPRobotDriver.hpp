@@ -4,7 +4,7 @@
 #include <vector>
 // #include "arduinoSensors.hpp"
 
-enum DriveMode { Tank, Arcade };
+enum DriveMode { TankTank, TankArcade, XDrive };
 enum BindMode { Toggle, Step, Hold };
 
 class CPRobotMotor {
@@ -22,12 +22,20 @@ public:
 
 class CPRobotMotorSet {
 private:
-  std::vector<CPRobotMotor> motors;
+  std::vector<CPRobotMotor *> motors;
 public:
-  CPRobotMotorSet(std::initializer_list<int> ports);
+  CPRobotMotorSet(std::initializer_list<CPRobotMotor *> motors);
   std::string listMotors();
   void setSpeed(int speed);
   void moveTo(int position, int speed);
+};
+
+class CPRobotMotorList {
+private:
+  std::map<int, CPRobotMotor> motors;
+public:
+  CPRobotMotorList(std::initializer_list<int> ports);
+  CPRobotMotor* get(int port);
 };
 
 class CPRobotControllerBind {
@@ -52,13 +60,12 @@ public:
 
 class CPRobotDriver {
 private:
-  CPRobotMotorSet *leftMotorSet;
-  CPRobotMotorSet *rightMotorSet;
+  std::vector<CPRobotMotorSet *> driveMotors;
   DriveMode driveMode;
   pros::Controller controller;
   std::vector<CPRobotControllerBind *> controllerBinds;
 public:
-  CPRobotDriver(CPRobotMotorSet &left, CPRobotMotorSet &right, DriveMode mode, std::vector<CPRobotControllerBind *> cb);
+  CPRobotDriver(std::vector<CPRobotMotorSet *> driveMotors, DriveMode mode, std::vector<CPRobotControllerBind *> cb);
   void setSpeed(int speed);
   void controlCycle();
 };
