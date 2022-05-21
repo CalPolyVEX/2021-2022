@@ -7,7 +7,13 @@
 enum DriveMode { Tank, TankArcade, XDrive };
 enum BindMode { Toggle, Step, Hold };
 
-class CPRobotMotor {
+class CPRobotAbstractMotor {
+public:
+  virtual void setSpeed(int speed) = 0;
+  virtual void moveTo(int position, int speed) = 0;
+};
+
+class CPRobotMotor: public CPRobotAbstractMotor {
 private:
   int port;
   pros::Motor motor;
@@ -20,7 +26,7 @@ public:
   void moveTo(int position, int speed);
 };
 
-class CPRobotMotorSet {
+class CPRobotMotorSet: public CPRobotAbstractMotor {
 private:
   std::vector<CPRobotMotor *> motors;
 public:
@@ -40,7 +46,7 @@ public:
 
 class CPRobotControllerBind {
 private:
-  CPRobotMotorSet *motorSet;
+  CPRobotAbstractMotor *motors;
   pros::controller_digital_e_t buttonPrimary;
   pros::controller_digital_e_t buttonSecondary;
   std::vector<int> positions;
@@ -54,18 +60,18 @@ private:
   void controlCycleStep(bool pressedPrimary, bool pressedSecondary);
   void controlCycleHold(bool pressedPrimary, bool pressedSecondary);
 public:
-  CPRobotControllerBind(CPRobotMotorSet *m, pros::controller_digital_e_t bp, pros::controller_digital_e_t bs, int i, std::vector<int> p, enum BindMode bm);
+  CPRobotControllerBind(CPRobotAbstractMotor *m, pros::controller_digital_e_t bp, pros::controller_digital_e_t bs, int i, std::vector<int> p, enum BindMode bm);
   void controlCycle(pros::Controller controller);
 };
 
 class CPRobotDriver {
 private:
-  std::vector<CPRobotMotorSet *> driveMotors;
+  std::vector<CPRobotAbstractMotor *> driveMotors;
   DriveMode driveMode;
   pros::Controller controller;
   std::vector<CPRobotControllerBind *> controllerBinds;
 public:
-  CPRobotDriver(std::vector<CPRobotMotorSet *> driveMotors, DriveMode mode, std::vector<CPRobotControllerBind *> cb);
+  CPRobotDriver(std::vector<CPRobotAbstractMotor *> driveMotors, DriveMode mode, std::vector<CPRobotControllerBind *> cb);
   void setSpeed(int speed);
   void controlCycle();
   pros::Controller getController();

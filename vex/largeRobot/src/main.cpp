@@ -12,15 +12,19 @@ CPRobotMotorList *motors = NULL;
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	//First we have to list out all the motors we're using - negative port numbers denote reversed direction
 	motors = new CPRobotMotorList({-2, -3, 4, 15, 17});
+	//Then we specify which motors should be treated as a group
 	CPRobotMotorSet left({motors->get(2), motors->get(3)});
 	CPRobotMotorSet right({motors->get(15), motors->get(17)});
-	CPRobotMotorSet lever({motors->get(4)});
-	CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
+	//Then we pair any simple controls
+	CPRobotControllerBind leverBind(motors->get(4), pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
-	std::vector<CPRobotMotorSet *> driveMotors({&left, &right});
+	//After setting up all our motors, we create vectors of drive motors and controller binds
+	std::vector<CPRobotAbstractMotor *> driveMotors({&left, &right});
 	std::vector<CPRobotControllerBind *> binds({&leverBind});
+	//Finally, we initialize the robot driver instance, passing these two vectors and an enum to denote drive mode
 	robot = new CPRobotDriver(driveMotors, TankArcade, binds);
 
 	pros::lcd::initialize();
