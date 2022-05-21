@@ -6,7 +6,6 @@ CPRobotDriver *robot = NULL;
 CPRobotMotorList *motors = NULL;
 CPRobotMotorSet *left = NULL;
 CPRobotMotorSet *right = NULL;
-CPRobotMotorSet *singleBind = NULL;
 CPRobotControllerBind *leverBind = NULL;
 
 /**
@@ -21,13 +20,12 @@ void initialize() {
 	//Then we specify which motors should be treated as a group
 	left = new CPRobotMotorSet({motors->get(2), motors->get(3)});
 	 right = new CPRobotMotorSet({motors->get(15), motors->get(17)});
-	 singleBind = new CPRobotMotorSet({motors->get(4)});
 	//Then we pair any simple controls
-	 leverBind = new CPRobotControllerBind(singleBind, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
+	 leverBind = new CPRobotControllerBind(motors->get(4), pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int> {0, 100, 200, 400, 800, 1600}, Step);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Toggle);
 	// CPRobotControllerBind leverBind(&lever, pros::E_CONTROLLER_DIGITAL_X, pros::E_CONTROLLER_DIGITAL_B, 0, std::vector<int>{}, Hold);
 	//After setting up all our motors, we create vectors of drive motors and controller binds
-	std::vector<CPRobotMotorSet *> driveMotors({left, right});
+	std::vector<CPRobotAbstractMotor *> driveMotors({left, right});
 	std::vector<CPRobotControllerBind *> binds({leverBind});
 	//Finally, we initialize the robot driver instance, passing these two vectors and an enum to denote drive mode
 	robot = new CPRobotDriver(driveMotors, TankArcade, binds);
