@@ -25,19 +25,19 @@ void CPRobotDriver::setSpeed(int speed) {
 }
 void CPRobotDriver::controlCycle() {
   switch(this->driveMode) {
-    case Tank: {
+    case TANK: {
       this->driveMotors[0]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
       this->driveMotors[1]->setSpeed(this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
       break;
     }
-    case TankArcade: {
+    case ARCADE: {
       int vertical = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
       int horizontal = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
       this->driveMotors[0]->setSpeed((vertical + horizontal));
       this->driveMotors[1]->setSpeed((vertical - horizontal));
       break;
     }
-    case XDrive: {
+    case XDRIVE: {
       int turn = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
       int h = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
       int v = this->controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
@@ -64,6 +64,7 @@ pros::Controller CPRobotDriver::getController() {
 CPRobotMotor::CPRobotMotor(int portNum) : motor(std::abs(portNum), portNum < 0) {
   this->port = std::abs(portNum);
   this->dir = portNum < 0 ? -1 : 1;
+  this->motor.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
 }
 int CPRobotMotor::getPort() { return this->port; }
 int CPRobotMotor::getDirection() { return this->dir; }
@@ -72,6 +73,29 @@ void CPRobotMotor::setSpeed(int speed) {
 }
 void CPRobotMotor::moveTo(int position, int speed) {
   this->motor.move_absolute((double)position, speed);
+}
+
+/**
+ *
+ * CP ROBOT DIGITAL OUT
+ *
+ */
+CPRobotDigitalOut::CPRobotDigitalOut(int portNum) : output(std::abs(portNum)) {
+  this->port = std::abs(portNum);
+  this->value = false;
+}
+void CPRobotDigitalOut::set(bool newValue) {
+  this->value = newValue;
+  this->output.set_value(this->value);
+}
+void CPRobotDigitalOut::toggle() {
+  this->set(!this->value);
+}
+void CPRobotDigitalOut::setSpeed(int speed) {
+  this->toggle();
+}
+void CPRobotDigitalOut::moveTo(int position, int speed) {
+  this->toggle();
 }
 
 /**
@@ -120,6 +144,20 @@ CPRobotMotor* CPRobotMotorList::get(int port) {
 
 /**
  *
+ * CP ROBOT DIGITAL OUT LIST
+ *
+ */
+CPRobotDigitalOutList::CPRobotDigitalOutList(std::initializer_list<int> ports) {
+ for (int port : ports) {
+   this->outs.insert(std::make_pair(std::abs(port), CPRobotDigitalOut(port)));
+ }
+}
+CPRobotDigitalOut* CPRobotDigitalOutList::get(int port) {
+  return &(this->outs.find(std::abs(port))->second);
+}
+
+/**
+ *
  * CP ROBOT MOTOR CONTROLLER BIND
  *
  */
@@ -142,13 +180,13 @@ void CPRobotControllerBind::controlCycle(pros::Controller controller) {
   bool pressedPrimary = controller.get_digital(this->buttonPrimary);
   bool pressedSecondary = (this->buttonSecondary ? controller.get_digital(this->buttonSecondary) : false);
   switch(this->bindMode) {
-    case Toggle:
+    case TOGGLE:
       this->controlCycleToggle(pressedPrimary);
       break;
-    case Hold:
+    case HOLD:
       this->controlCycleHold(pressedPrimary, pressedSecondary);
       break;
-    case Step:
+    case STEP:
       this->controlCycleStep(pressedPrimary, pressedSecondary);
       break;
   }

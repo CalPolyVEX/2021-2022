@@ -4,8 +4,8 @@
 #include <vector>
 // #include "arduinoSensors.hpp"
 
-enum DriveMode { Tank, TankArcade, XDrive };
-enum BindMode { Toggle, Step, Hold };
+enum DriveMode { TANK, ARCADE, XDRIVE };
+enum BindMode { TOGGLE, STEP, HOLD };
 
 class CPRobotAbstractMotor {
 public:
@@ -26,6 +26,19 @@ public:
   void moveTo(int position, int speed);
 };
 
+class CPRobotDigitalOut: public CPRobotAbstractMotor {
+private:
+  int port;
+  bool value;
+  pros::ADIDigitalOut output;
+public:
+  CPRobotDigitalOut(int portNum);
+  void set(bool newValue);
+  void toggle();
+  void setSpeed(int speed);
+  void moveTo(int position, int speed);
+};
+
 class CPRobotMotorSet: public CPRobotAbstractMotor {
 private:
   std::vector<CPRobotMotor *> motors;
@@ -42,6 +55,14 @@ private:
 public:
   CPRobotMotorList(std::initializer_list<int> ports);
   CPRobotMotor* get(int port);
+};
+
+class CPRobotDigitalOutList {
+private:
+  std::map<int, CPRobotDigitalOut> outs;
+public:
+  CPRobotDigitalOutList(std::initializer_list<int> ports);
+  CPRobotDigitalOut* get(int port);
 };
 
 class CPRobotControllerBind {
